@@ -20,7 +20,7 @@ HireFlow provides a unified platform with these core features:
 ### MVP Features (Phase 1)
 - **Resume Upload & Parsing** — Upload PDF/DOCX resumes; extract structured data (skills, experience, education).
 - **AI-Powered JD Tailoring** — Paste a job description, get an optimized resume variant with a match score.
-- **Interview Funnel Tracker** — Kanban-style board to track applications through stages: Wishlist → Applied → Phone Screen → Technical → Onsite → HR → Offer → Accepted/Rejected/Withdrawn.
+- **Application Pipeline (Conversion-First)** — Track applications through stages: Saved → Applying → Applied → **Callback ✨** → Interviewing → Offer 🎉. No "Rejected" stage — cold applications are quietly archived. The hero metric is **callback rate**.
 - **Job Listings Aggregation** — Curated listings from top Indian job boards presented in a unified feed.
 
 ### Future Features (Phase 2+)

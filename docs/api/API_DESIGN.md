@@ -136,7 +136,11 @@ Generate an AI-tailored resume based on a job description.
 
 ---
 
-### Application (Interview Funnel) Module
+### Application Tracking Module (Conversion-First)
+
+> **Design Philosophy**: The tracking model is designed to celebrate progress,
+> not document failures. There is no "REJECTED" stage — cold applications are
+> quietly "CLOSED". The hero metric is **callback rate**.
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
@@ -145,10 +149,10 @@ Generate an AI-tailored resume based on a job description.
 | `GET` | `/api/applications/:id` | Get application details | ✅ |
 | `PATCH` | `/api/applications/:id` | Update application (change stage, notes) | ✅ |
 | `DELETE` | `/api/applications/:id` | Delete an application | ✅ |
-| `GET` | `/api/applications/stats` | Get funnel analytics | ✅ |
+| `GET` | `/api/applications/stats` | Get conversion analytics | ✅ |
 
 #### `GET /api/applications`
-Returns applications grouped by stage (for Kanban UI).
+Returns applications grouped by stage (for pipeline UI).
 
 ```json
 // Response (200)
@@ -157,14 +161,15 @@ Returns applications grouped by stage (for Kanban UI).
   "data": [
     {
       "id": "clxapp123",
-      "stage": "TECHNICAL_ROUND",
+      "stage": "CALLBACK",
       "jobDescription": {
         "title": "Senior Frontend Engineer",
         "company": "Razorpay"
       },
       "appliedAt": "2026-03-01T10:00:00Z",
+      "callbackAt": "2026-03-05T14:00:00Z",
       "nextActionDate": "2026-03-12T14:00:00Z",
-      "notes": "Round 2 with engineering manager",
+      "notes": "Got a call from recruiter, technical round scheduled",
       "updatedAt": "2026-03-08T16:30:00Z"
     }
   ],
@@ -179,10 +184,17 @@ Returns applications grouped by stage (for Kanban UI).
 Move an application to a new stage.
 
 ```json
-// Request
+// Request — Moving to CALLBACK (the big win!)
 {
-  "stage": "OFFER",
-  "notes": "Received verbal offer, ₹28 LPA, waiting for written letter"
+  "stage": "CALLBACK",
+  "callbackAt": "2026-03-05T14:00:00Z",
+  "notes": "Recruiter called! Technical round next week"
+}
+
+// Request — Closing an application (neutral, not "rejected")
+{
+  "stage": "CLOSED",
+  "closedReason": "Role was filled internally"
 }
 
 // Response (200)
@@ -190,15 +202,16 @@ Move an application to a new stage.
   "success": true,
   "data": {
     "id": "clxapp123",
-    "stage": "OFFER",
-    "notes": "Received verbal offer, ₹28 LPA, waiting for written letter",
+    "stage": "CALLBACK",
+    "callbackAt": "2026-03-05T14:00:00Z",
+    "notes": "Recruiter called! Technical round next week",
     "updatedAt": "2026-03-09T20:00:00Z"
   }
 }
 ```
 
 #### `GET /api/applications/stats`
-Funnel analytics for the user.
+Conversion analytics — designed to motivate, not demoralize.
 
 ```json
 // Response (200)
@@ -206,21 +219,25 @@ Funnel analytics for the user.
   "success": true,
   "data": {
     "totalApplications": 42,
+    "activeApplications": 34,
     "byStage": {
-      "WISHLIST": 5,
+      "SAVED": 5,
+      "APPLYING": 3,
       "APPLIED": 18,
-      "PHONE_SCREEN": 8,
-      "TECHNICAL_ROUND": 5,
-      "ONSITE": 2,
-      "HR_ROUND": 1,
-      "OFFER": 2,
-      "ACCEPTED": 1,
-      "REJECTED": 8,
-      "WITHDRAWN": 2
+      "CALLBACK": 4,
+      "INTERVIEWING": 3,
+      "OFFER": 1,
+      "CLOSED": 8
     },
-    "conversionRate": 0.048,
-    "avgTimeToOffer": "23 days",
-    "mostActiveCompanies": ["Razorpay", "Flipkart", "Google"]
+    "callbackRate": 0.22,
+    "callbackRateLabel": "22% callback rate — above average! 🔥",
+    "avgTimeToCallback": "4.2 days",
+    "thisWeekHighlights": {
+      "newCallbacks": 2,
+      "applicationsSubmitted": 5,
+      "offersReceived": 0
+    },
+    "topRespondingCompanies": ["Razorpay", "Flipkart", "Zerodha"]
   }
 }
 ```

@@ -102,19 +102,24 @@ model JobListing {
 }
 
 // ============================================
-// Interview Funnel / Application Tracking
+// Application Tracking (Conversion-First Model)
 // ============================================
+// Philosophy: Focus on getting callbacks & offers.
+// No "REJECTED" stage — cold applications are quietly "CLOSED".
+// The hero metric is CALLBACK rate, not rejection count.
 
 model Application {
-  id               String         @id @default(cuid())
+  id               String           @id @default(cuid())
   userId           String
   jobDescriptionId String
-  stage            InterviewStage @default(WISHLIST)
-  notes            String?        @db.Text
-  appliedAt        DateTime?
-  nextActionDate   DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  stage            ApplicationStage @default(SAVED)
+  notes            String?          @db.Text
+  appliedAt        DateTime?        // When the user submitted the application
+  callbackAt       DateTime?        // 🎉 When they got a response (the key win)
+  nextActionDate   DateTime?        // Reminder for follow-ups
+  closedReason     String?          // Optional: why it was closed (for user's own reference)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobDescription JobDescription @relation(fields: [jobDescriptionId], references: [id], onDelete: Cascade)
@@ -126,17 +131,16 @@ model Application {
 // Enums
 // ============================================
 
-enum InterviewStage {
-  WISHLIST
-  APPLIED
-  PHONE_SCREEN
-  TECHNICAL_ROUND
-  ONSITE
-  HR_ROUND
-  OFFER
-  ACCEPTED
-  REJECTED
-  WITHDRAWN
+// Conversion-first pipeline — no demoralizing "REJECTED" stage
+// SAVED → APPLYING → APPLIED → CALLBACK ✨ → INTERVIEWING → OFFER 🎉 → CLOSED
+enum ApplicationStage {
+  SAVED         // Interested, bookmarked for later
+  APPLYING      // Resume tailored, preparing to apply
+  APPLIED       // Application submitted
+  CALLBACK      // Got a response back (the key conversion!)
+  INTERVIEWING  // Active interview process (any round)
+  OFFER         // Received an offer
+  CLOSED        // Quietly archived (neutral, not negative)
 }
 
 enum JobPlatform {

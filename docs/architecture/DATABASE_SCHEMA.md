@@ -135,17 +135,19 @@ A job description saved by the user (pasted manually or scraped from a board).
 ---
 
 ### Application
-Tracks a user's application through the interview pipeline.
+Tracks a user's application through the **conversion-first pipeline**. No "REJECTED" stage — cold applications are quietly "CLOSED".
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `id` | String (CUID) | PK | Unique identifier |
 | `userId` | String | FK → User | Applicant |
 | `jobDescriptionId` | String | FK → JobDescription | The job applied to |
-| `stage` | InterviewStage | Default: WISHLIST | Current pipeline stage |
+| `stage` | ApplicationStage | Default: SAVED | Current pipeline stage |
 | `notes` | Text | Optional | User's private notes |
 | `appliedAt` | DateTime | Optional | When the application was submitted |
+| `callbackAt` | DateTime | Optional | 🎉 When they got a response (the hero metric) |
 | `nextActionDate` | DateTime | Optional | Reminder for next follow-up |
+| `closedReason` | String | Optional | Why it was closed (user's own reference, not shown publicly) |
 | `createdAt` | DateTime | Auto | Record creation |
 | `updatedAt` | DateTime | Auto | Last stage change |
 
@@ -173,28 +175,24 @@ Aggregated job listings scraped/fetched from external job boards. **Not** user-s
 
 ## Enums
 
-### InterviewStage
-Represents the stages in a typical interview pipeline:
+### ApplicationStage
+Conversion-first pipeline — focuses on celebrating progress, not tracking failures:
 
 ```
-WISHLIST → APPLIED → PHONE_SCREEN → TECHNICAL_ROUND → ONSITE → HR_ROUND → OFFER
-                                                                              ├── ACCEPTED
-                                                                              ├── REJECTED
-                                                                              └── WITHDRAWN
+SAVED → APPLYING → APPLIED → CALLBACK ✨ → INTERVIEWING → OFFER 🎉 → CLOSED
 ```
 
 | Value | Description |
 |-------|-------------|
-| `WISHLIST` | Saved but not yet applied |
+| `SAVED` | Interested, bookmarked for later |
+| `APPLYING` | Resume tailored, preparing to apply |
 | `APPLIED` | Application submitted |
-| `PHONE_SCREEN` | Initial phone/video screening |
-| `TECHNICAL_ROUND` | Technical interview (DSA, system design, coding) |
-| `ONSITE` | On-site or extended virtual interview |
-| `HR_ROUND` | HR/culture-fit discussion |
+| `CALLBACK` | Got a response back — **the hero metric** |
+| `INTERVIEWING` | Active interview process (any round) |
 | `OFFER` | Received an offer |
-| `ACCEPTED` | Offer accepted |
-| `REJECTED` | Rejected at any stage |
-| `WITHDRAWN` | Candidate withdrew |
+| `CLOSED` | Quietly archived (neutral, not negative) |
+
+> **Design Philosophy**: No "REJECTED" or "WITHDRAWN" stages. Applications that go cold are simply moved to CLOSED. The dashboard celebrates callbacks and offers, not losses. Users can optionally note a `closedReason` for their own reference.
 
 ### JobPlatform
 Supported job board sources:

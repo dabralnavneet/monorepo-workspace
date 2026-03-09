@@ -47,28 +47,30 @@ export interface JobDescription {
   createdAt: Date;
 }
 
-// --- Interview Funnel ---
-export enum InterviewStage {
-  WISHLIST = 'WISHLIST',
-  APPLIED = 'APPLIED',
-  PHONE_SCREEN = 'PHONE_SCREEN',
-  TECHNICAL_ROUND = 'TECHNICAL_ROUND',
-  ONSITE = 'ONSITE',
-  HR_ROUND = 'HR_ROUND',
-  OFFER = 'OFFER',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  WITHDRAWN = 'WITHDRAWN',
+// --- Application Tracking (Conversion-First Model) ---
+// Philosophy: Focus on getting callbacks & offers.
+// No "REJECTED" stage — cold applications are quietly "CLOSED".
+// Hero metric = CALLBACK rate, not rejection count.
+export enum ApplicationStage {
+  SAVED = 'SAVED',               // Interested, bookmarked for later
+  APPLYING = 'APPLYING',         // Resume tailored, preparing to apply
+  APPLIED = 'APPLIED',           // Application submitted
+  CALLBACK = 'CALLBACK',         // Got a response back (the key conversion!)
+  INTERVIEWING = 'INTERVIEWING', // Active interview process (any round)
+  OFFER = 'OFFER',               // Received an offer
+  CLOSED = 'CLOSED',             // Quietly archived (neutral, not negative)
 }
 
 export interface Application {
   id: string;
   userId: string;
   jobDescriptionId: string;
-  stage: InterviewStage;
+  stage: ApplicationStage;
   notes?: string;
   appliedAt?: Date;
+  callbackAt?: Date;           // 🎉 When they got a response (the key win)
   nextActionDate?: Date;
+  closedReason?: string;       // Optional: why it was closed (user's own reference)
   createdAt: Date;
   updatedAt: Date;
 }

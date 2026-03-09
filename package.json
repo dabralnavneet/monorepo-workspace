@@ -1,0 +1,23 @@
+{
+  "name": "hireflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "End-to-end interview experience platform",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "dev:web": "turbo dev --filter=@hireflow/web",
+    "dev:server": "turbo dev --filter=@hireflow/server",
+    "db:generate": "turbo db:generate --filter=@hireflow/database",
+    "db:push": "turbo db:push --filter=@hireflow/database",
+    "db:migrate": "turbo db:migrate --filter=@hireflow/database",
+    "clean": "turbo clean"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.14"
+  }
+}

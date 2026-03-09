@@ -1,17 +1,19 @@
 {
-  "name": "hireflow",
-  "version": "0.1.0",
+  "name": "monorepo-workspace",
+  "version": "1.0.0",
   "private": true,
-  "description": "End-to-end interview experience platform",
+  "description": "Centralized monorepo for all standard side-projects and apps",
+  "packageManager": "pnpm@10.31.0",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "dev:web": "turbo dev --filter=@hireflow/web",
-    "dev:server": "turbo dev --filter=@hireflow/server",
-    "db:generate": "turbo db:generate --filter=@hireflow/database",
-    "db:push": "turbo db:push --filter=@hireflow/database",
-    "db:migrate": "turbo db:migrate --filter=@hireflow/database",
+    "dev:callbackos": "turbo dev --filter=@callbackos/*",
+    "dev:callbackos:web": "turbo dev --filter=@callbackos/web",
+    "dev:callbackos:server": "turbo dev --filter=@callbackos/server",
+    "db:callbackos:generate": "turbo db:generate --filter=@callbackos/database",
+    "db:callbackos:push": "turbo db:push --filter=@callbackos/database",
+    "db:callbackos:migrate": "turbo db:migrate --filter=@callbackos/database",
     "clean": "turbo clean"
   },
   "engines": {

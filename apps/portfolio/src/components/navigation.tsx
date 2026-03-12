@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { IconHome, IconBriefcase, IconTool, IconMail } from '@tabler/icons-react';
+import { IconHome, IconBriefcase, IconTool, IconMail, IconRocket } from '@tabler/icons-react';
 
 const navItems = [
   { id: 'home', label: 'Home', icon: IconHome },
+  { id: 'prototypes', label: 'Products', icon: IconRocket },
   { id: 'toolkit', label: 'Toolkit', icon: IconTool },
   { id: 'experience', label: 'Experience', icon: IconBriefcase },
   { id: 'contact', label: 'Contact', icon: IconMail },

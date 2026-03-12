@@ -63,17 +63,17 @@ export default function ProductPrototypes() {
             
             <div className="mt-4">
               <h3 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight group-hover:text-purple-400 transition-colors">CallbackOS</h3>
-              <p className="text-sm font-mono text-purple-400/80 mt-1 uppercase tracking-wider">Full Stack Platform</p>
+              <p className="text-sm font-mono text-purple-400/80 mt-1 uppercase tracking-wider">Interview Assistant Platform</p>
               <p className="text-zinc-400 text-sm sm:text-base mt-4 leading-relaxed">
-                An end-to-end event resolution dashboard. Demonstrates deep architectural thinking, seamless API integrations, and robust real-time user experiences for production environments.
+                An end-to-end platform for job seekers. Features AI-tailored resume generation, automated job aggregation, and a conversion-focused dashboard designed to optimize interview pipelines and generate leads.
               </p>
             </div>
           </div>
           
           <div className="relative z-10 mt-8 flex flex-wrap gap-2">
             <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">Next.js</span>
-            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">Monorepo</span>
-            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">E2E Architecture</span>
+            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">Job Aggregation</span>
+            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">AI Resumes</span>
           </div>
         </a>
 

@@ -73,25 +73,31 @@ const months = differenceInMonths % 12;
       </div>
     </section>
 
-    <div class="relative z-10 w-full mt-10">
+    <div class="relative z-10 w-full">
       <Container client:load>
-        <div class="flex flex-col w-full items-center">
-          <section id="prototypes" class="w-full flex flex-col items-center mb-20 md:mb-32" style="scroll-margin-top: 120px;">
-            <p class="text-xs uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">Featured Work</p>
-            <h2 class="text-3xl md:text-5xl font-black tracking-tighter mb-8 text-center text-zinc-900" style="font-family: 'Google Sans Flex', sans-serif;">Product Prototypes</h2>
-            <ProductPrototypes client:load />
+        <div class="flex flex-col w-full">
+          <section id="prototypes" class="w-full min-h-[100dvh] flex flex-col justify-center py-24" style="scroll-margin-top: 0px;">
+            <div class="flex flex-col items-center">
+              <p class="text-xs uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">Featured Work</p>
+              <h2 class="text-3xl md:text-5xl font-black tracking-tighter mb-8 text-center text-zinc-900" style="font-family: 'Google Sans Flex', sans-serif;">Product Prototypes</h2>
+              <ProductPrototypes client:load />
+            </div>
           </section>
 
-          <section id="toolkit" class="w-full flex flex-col items-center mb-20 md:mb-32" style="scroll-margin-top: 120px;">
-            <p class="text-xs uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">Capabilities</p>
-            <h2 class="text-3xl md:text-5xl font-black tracking-tighter text-zinc-900" style="font-family: 'Google Sans Flex', sans-serif;">My Toolkit</h2>
-            <Tech client:load />
+          <section id="toolkit" class="w-full min-h-[100dvh] flex flex-col justify-center py-24" style="scroll-margin-top: 0px;">
+            <div class="flex flex-col items-center">
+              <p class="text-xs uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">Capabilities</p>
+              <h2 class="text-3xl md:text-5xl font-black tracking-tighter text-zinc-900" style="font-family: 'Google Sans Flex', sans-serif;">My Toolkit</h2>
+              <Tech client:load />
+            </div>
           </section>
 
-          <section id="experience" class="w-full flex flex-col items-center" style="scroll-margin-top: 120px;">
-            <p class="text-xs uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">Career Path</p>
-            <h2 class="text-3xl md:text-5xl font-black tracking-tighter mb-8 text-zinc-900" style="font-family: 'Google Sans Flex', sans-serif;">Work Experience</h2>
-            <WorkExperience client:load />
+          <section id="experience" class="w-full min-h-[100dvh] flex flex-col justify-center py-24" style="scroll-margin-top: 0px;">
+            <div class="flex flex-col items-center">
+              <p class="text-xs uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">Career Path</p>
+              <h2 class="text-3xl md:text-5xl font-black tracking-tighter mb-8 text-zinc-900" style="font-family: 'Google Sans Flex', sans-serif;">Work Experience</h2>
+              <WorkExperience client:load />
+            </div>
           </section>
         </div>
       </Container>

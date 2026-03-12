@@ -5,6 +5,7 @@ import { Tech } from '../components/tech';
 import WorkExperience from '../components/experience';
 import Container from '../components/container';
 import FloatingGhostText from '../components/FloatingGhostText';
+import ProductPrototypes from '../components/prototypes';
 import { IconBrandLinkedin, IconBrandX, IconMail } from '@tabler/icons-react';
 
 // Get the current date
@@ -78,6 +79,12 @@ const months = differenceInMonths % 12;
     <div class="relative z-10 w-full mt-10">
       <Container client:load>
         <div class="flex flex-col w-full items-center">
+          <section id="prototypes" class="w-full flex flex-col items-center mb-12 md:mb-24" style="scroll-margin-top: 120px;">
+            <p class="text-xs uppercase tracking-[0.2em] text-cyan-400 font-semibold mb-2">E2E Product Mindset</p>
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tighter mb-8 text-center" style="font-family: 'Google Sans Flex', sans-serif;">Product Prototypes</h2>
+            <ProductPrototypes client:load />
+          </section>
+
           <section id="toolkit" class="w-full flex flex-col items-center" style="scroll-margin-top: 120px;">
             <p class="text-xs uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2">Capabilities</p>
             <h2 class="text-3xl md:text-5xl font-extrabold tracking-tighter" style="font-family: 'Google Sans Flex', sans-serif;">My Toolkit</h2>

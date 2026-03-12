@@ -3,8 +3,6 @@ name: Deploy Portfolio site to Pages
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'apps/portfolio/**'
 
   workflow_dispatch:
 
@@ -47,6 +45,29 @@ jobs:
       - name: Build portfolio
         run: pnpm --filter portfolio build
 
+      - name: Build CallbackOS Web
+        run: pnpm --filter @callbackos/web build
+
+      - name: Build Digital Twin Landing
+        run: pnpm --filter @digital-twin/landing build
+
+      - name: Merge build outputs
+        run: |
+          # The portfolio dist folder is already created by the portfolio build.
+          # Create subdirectories for the other apps.
+          mkdir -p apps/portfolio/dist/callbackos
+          mkdir -p apps/portfolio/dist/digital-twin
+
+          # Copy Next.js static export (out/) to the callbackos folder
+          cp -r apps/callbackos/web/out/* apps/portfolio/dist/callbackos/
+
+          # Copy Digital Twin Landing standard HTML files (exclude package.json/node_modules if any exist)
+          # We just copy all files manually as it doesn't have a real build
+          cp apps/digital-twin-landing/*.html apps/portfolio/dist/digital-twin/
+          cp -r apps/digital-twin-landing/assets apps/portfolio/dist/digital-twin/
+          cp -r apps/digital-twin-landing/styles.css apps/portfolio/dist/digital-twin/
+          cp -r apps/digital-twin-landing/script.js apps/portfolio/dist/digital-twin/
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

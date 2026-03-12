@@ -75,8 +75,8 @@ export const Tech = () => {
             key={index}
             onClick={() => setActiveTab(index)}
             className={`px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-all duration-300 ${activeTab === index
-              ? 'bg-zinc-100 text-[#09090b] shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105 border border-transparent'
-              : 'bg-white/5 text-zinc-400 hover:text-zinc-200 hover:bg-white/10 border border-white/10 hover:scale-105'
+              ? 'bg-zinc-900 text-white shadow-md scale-105 border border-zinc-900'
+              : 'bg-zinc-50 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 border border-zinc-200 hover:scale-105'
               }`}
           >
             {group.title}
@@ -85,10 +85,7 @@ export const Tech = () => {
       </div>
 
       {/* Tab Content Area */}
-      <div className="relative bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-3xl p-6 sm:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden min-h-[380px] sm:min-h-[320px] flex flex-col items-center group/container">
-
-        {/* Deep inner glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-600/5 opacity-0 group-hover/container:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+      <div className="relative bg-white border border-zinc-200 rounded-3xl p-6 sm:p-10 shadow-sm overflow-hidden min-h-[380px] sm:min-h-[320px] flex flex-col items-center group/container">
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -100,10 +97,10 @@ export const Tech = () => {
             className="flex flex-col items-center w-full relative z-10"
           >
             <div className="text-center mb-10">
-              <h3 className="text-2xl font-bold text-zinc-100 mb-2 tracking-tight">
+              <h3 className="text-2xl font-bold text-zinc-900 mb-2 tracking-tight">
                 {techGroups[activeTab].title}
               </h3>
-              <p className="text-sm sm:text-base text-zinc-400 max-w-md mx-auto">
+              <p className="text-sm sm:text-base text-zinc-500 max-w-md mx-auto">
                 {techGroups[activeTab].description}
               </p>
             </div>
@@ -114,11 +111,10 @@ export const Tech = () => {
                   key={idx}
                   className="group flex flex-col items-center justify-center gap-3 cursor-default"
                 >
-                  <div className="flex items-center justify-center p-4 rounded-2xl bg-white/[0.03] shadow-sm border border-white/10 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30 group-hover:text-cyan-400 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_8px_20px_rgba(6,182,212,0.15)] text-zinc-300 relative overflow-hidden">
+                  <div className="flex items-center justify-center p-4 rounded-2xl bg-zinc-50 shadow-sm border border-zinc-100 group-hover:bg-zinc-900 group-hover:border-zinc-900 group-hover:text-white transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-lg text-zinc-600 relative overflow-hidden">
                     <Icon className="h-8 w-8 sm:h-10 sm:w-10 opacity-80 group-hover:opacity-100 transition-opacity relative z-10" stroke={1.5} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-zinc-400 group-hover:text-zinc-200 transition-all">
+                  <span className="text-xs sm:text-sm font-medium text-zinc-500 group-hover:text-zinc-900 transition-all">
                     {name}
                   </span>
                 </div>

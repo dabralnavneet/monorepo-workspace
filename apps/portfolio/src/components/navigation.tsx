@@ -87,7 +87,7 @@ export default function Navigation() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
-        className="flex items-center gap-2 px-3 py-3 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+        className="flex items-center gap-2 px-3 py-3 bg-white/70 backdrop-blur-2xl border border-zinc-200/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
       >
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -107,7 +107,7 @@ export default function Navigation() {
               {isActive && (
                 <motion.div
                   layoutId="active-pill"
-                  className="absolute inset-0 bg-white/10 border border-white/10 rounded-xl"
+                  className="absolute inset-0 bg-zinc-900 border border-zinc-900 rounded-xl"
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
@@ -116,7 +116,7 @@ export default function Navigation() {
               {isHovered && !isActive && (
                 <motion.div
                   layoutId="hover-pill"
-                  className="absolute inset-0 bg-white/5 border border-white/5 rounded-xl"
+                  className="absolute inset-0 bg-zinc-100 border border-zinc-200 rounded-xl"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -128,8 +128,8 @@ export default function Navigation() {
                 size={22}
                 className={`relative z-10 transition-all duration-300 ${
                   isActive 
-                    ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)] scale-110' 
-                    : 'text-zinc-500 group-hover:text-zinc-200 group-hover:scale-105'
+                    ? 'text-white' 
+                    : 'text-zinc-500 group-hover:text-zinc-900 group-hover:scale-105'
                 }`}
                 stroke={isActive ? 2 : 1.5}
               />
@@ -143,13 +143,13 @@ export default function Navigation() {
                   scale: isHovered ? 1 : 0.9
                 }}
                 transition={{ duration: 0.2 }}
-                className="absolute -top-10 px-3 py-1.5 bg-zinc-900 border border-white/10 rounded-lg text-xs font-medium text-zinc-300 whitespace-nowrap pointer-events-none shadow-xl"
+                className="absolute -top-10 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-medium text-white whitespace-nowrap pointer-events-none shadow-xl"
               >
                 {item.label}
               </motion.div>
               
               {/* Active Dot Indicator */}
-              <div className={`absolute bottom-1 w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-cyan-400 opacity-100' : 'bg-transparent opacity-0'}`} />
+              <div className={`absolute bottom-1 w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-zinc-400 opacity-100' : 'bg-transparent opacity-0'}`} />
             </button>
           );
         })}

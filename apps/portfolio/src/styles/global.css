@@ -1,9 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-theme-background: #09090b; /* Deep zinc/OLED black */
-  --color-theme-text: #fafafa;         /* Crisp off-white */
-  --color-theme-muted: #a1a1aa;        /* Muted zinc */
+  --color-theme-background: #ffffff;
+  --color-theme-text: #09090b;
+  --color-theme-muted: #71717a;
+  --color-grid-line: rgba(9, 9, 11, 0.04);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-theme-background);
+    background-image: 
+      linear-gradient(var(--color-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-attachment: fixed;
+  }
 }
 
 @layer utilities {
@@ -13,14 +25,6 @@
   
   .animate-popIn {
     animation: popIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-aurora-1 {
-    animation: aurora 20s ease-in-out infinite alternate;
-  }
-  
-  .animate-aurora-2 {
-    animation: aurora 25s ease-in-out infinite alternate-reverse;
   }
 }
 
@@ -35,43 +39,28 @@
   }
 }
 
-@keyframes aurora {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.3;
-  }
-  50% {
-    transform: translate(10vw, 5vh) scale(1.2);
-    opacity: 0.5;
-  }
-  100% {
-    transform: translate(-5vw, 15vh) scale(0.9);
-    opacity: 0.3;
-  }
-}
-
 html {
   scroll-behavior: smooth;
-  background-color: var(--color-theme-background);
+  color: var(--color-theme-text);
 }
 
 body {
-  background-color: var(--color-theme-background);
+  background: transparent;
   color: var(--color-theme-text);
   overflow-x: hidden;
 }
 
-/* Base scrollbar for better dark mode aesthetics */
+/* Base scrollbar for better light mode aesthetics */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #f9fafb;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #e4e4e7;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #d4d4d8;
 }

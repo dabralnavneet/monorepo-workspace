@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlterEgo | Your Personal Digital Twin</title>
+    <meta name="description" content="Register your exact digital copy. Let AlterEgo handle your bill payments, hotel bookings, and daily tasks with zero cognitive load.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">AlterEgo<span>.ai</span></div>
+        <div class="nav-links">
+            <a href="#features">Capabilities</a>
+            <a href="#security">Trust</a>
+            <a href="#waitlist" class="btn-primary-small">Join Waitlist</a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="badge">Version 1.0 Waitlist Open</div>
+                <h1 class="hero-title">Your Life,<br><span class="gradient-text">Autopiloted.</span></h1>
+                <p class="hero-subtitle">Meet AlterEgo. Your exact digital copy in the agentic world. From booking flights to negotiating bills, hand over the mundane and reclaim your time.</p>
+                <div class="hero-cta">
+                    <button class="btn-primary" onclick="openModal()">Summon Your Twin</button>
+                    <button class="btn-secondary">See How It Works</button>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="glow-orb"></div>
+                <img id="hero-image" src="assets/hero-hologram.png" alt="Digital Twin Hologram" class="glass-image">
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <h2 class="section-title">Zero friction. <br><span class="gradient-text">Total autonomy.</span></h2>
+            <div class="feature-grid">
+                <div class="feature-card reveal">
+                    <div class="icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    </div>
+                    <h3>Financial Autopilot</h3>
+                    <p>Bill payments, subscription management, and expense dispute resolution—handled exactly how you would do it.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <h3>Support Negotiation</h3>
+                    <p>Never wait on hold again. AlterEgo calls airlines, ISPs, and customer service to resolve issues on your behalf.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h3>Hyper-Personalized Travel</h3>
+                    <p>Books hotels with the exact gym equipment you prefer, and flights tailored to your specific travel stamina.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <h3>Asynchronous Living</h3>
+                    <p>While you sleep, your agent works. Wake up to an optimized calendar, completed chores, and a prepared day.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Section -->
+        <section id="security" class="security">
+            <div class="security-content reveal">
+                <h2>Ironclad Trust.</h2>
+                <p>We know we are holding the keys to your life. AlterEgo runs on isolated, encrypted edge networks. You retain absolute kill-switch control over your twin's permissions at all times.</p>
+            </div>
+        </section>
+
+        <!-- Waitlist Modal (Hidden by default) -->
+        <div id="waitlist-modal" class="modal">
+            <div class="modal-content glass-panel">
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>Claim your Twin</h2>
+                <p>Enter your email to secure early access.</p>
+                <form class="waitlist-form" onsubmit="event.preventDefault(); alert('Added to waitlist!'); closeModal();">
+                    <input type="email" placeholder="you@example.com" required>
+                    <button type="submit" class="btn-primary">Join</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="logo">AlterEgo<span>.ai</span></div>
+            <p>© 2026 AlterEgo Inc. The Philosophy of Identity.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

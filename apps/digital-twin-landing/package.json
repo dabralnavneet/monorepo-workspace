@@ -1,0 +1,10 @@
+{
+  "name": "@digital-twin/landing",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm dlx serve .",
+    "build": "echo \"Nothing to build\"",
+    "start": "pnpm dlx serve ."
+  }
+}

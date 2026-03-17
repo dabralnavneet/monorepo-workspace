@@ -101,21 +101,7 @@ export const Tech = () => {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="w-full"
           >
-            <div className="flex flex-col md:flex-row gap-8 sm:gap-12 items-start justify-between mb-8 sm:mb-16 pl-4 border-l-2 border-stone-800">
-               <div className="max-w-md">
-                 <h3 className="text-xl sm:text-3xl font-extrabold text-stone-800 mb-2 sm:mb-4 tracking-tighter uppercase italic text-nowrap">
-                   SPEC_MODULE // 0x0{activeTab + 1}
-                 </h3>
-                 <p className="text-sm sm:text-lg text-stone-500 font-medium leading-relaxed">
-                   {techGroups[activeTab].description}
-                 </p>
-               </div>
-               
-               <div className="hidden md:flex flex-col gap-1 items-end pt-2">
-                 <span className="text-[10px] font-mono text-stone-300 uppercase tracking-[0.3em]">Revision: 04.0b</span>
-                 <span className="text-[10px] font-mono text-stone-300 uppercase tracking-[0.3em]">Datum: Grid.7.4</span>
-               </div>
-            </div>
+
 
             {/* Circular Orbit Layout */}
             <div className="relative w-full max-w-3xl mx-auto h-[350px] sm:h-[450px] flex items-center justify-center mt-4 sm:mt-12 mb-8 sm:mb-16">

@@ -118,15 +118,7 @@ export const Tech = () => {
             </div>
 
             {/* Circular Orbit Layout */}
-            <div className="relative w-full h-[350px] sm:h-[450px] flex items-center justify-center mt-4 sm:mt-12 mb-8 sm:mb-16">
-              {/* Subtle orbital ring background */}
-              <div className="absolute w-[240px] h-[240px] sm:w-[340px] sm:h-[340px] rounded-full border border-stone-200 border-dashed opacity-50"></div>
-              
-              {/* Center decorative core */}
-              <div className="absolute w-12 h-12 rounded-full border border-stone-300 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-stone-400"></div>
-              </div>
-
+            <div className="relative w-full max-w-3xl mx-auto h-[350px] sm:h-[450px] flex items-center justify-center mt-4 sm:mt-12 mb-8 sm:mb-16">
               {techGroups[activeTab].technologies.map(({ Icon }, idx) => {
                 const total = techGroups[activeTab].technologies.length;
                 const angle = (idx / total) * 360;

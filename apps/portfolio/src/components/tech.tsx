@@ -69,21 +69,21 @@ export const Tech = () => {
     <div className="w-full flex flex-col mt-4 sm:mt-8 px-2 max-w-6xl mx-auto">
       {/* Schematic Layers (Tab Navigation) */}
       <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8 sm:mb-16 relative">
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-zinc-100"></div>
+        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-stone-100"></div>
         {techGroups.map((group, index) => (
           <button
             key={index}
             onClick={() => setActiveTab(index)}
             className={`pb-3 sm:pb-4 px-1 sm:px-2 text-[10px] sm:text-base font-mono uppercase tracking-[0.2em] transition-all duration-300 relative ${activeTab === index
-              ? 'text-zinc-900 font-bold'
-              : 'text-zinc-400 hover:text-zinc-600'
+              ? 'text-stone-800 font-bold'
+              : 'text-stone-400 hover:text-stone-600'
               }`}
           >
             {group.title}
             {activeTab === index && (
               <motion.div 
                 layoutId="activeLayer"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" 
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-stone-800" 
               />
             )}
           </button>
@@ -101,19 +101,19 @@ export const Tech = () => {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="w-full"
           >
-            <div className="flex flex-col md:flex-row gap-8 sm:gap-12 items-start justify-between mb-8 sm:mb-16 pl-4 border-l-2 border-zinc-900">
+            <div className="flex flex-col md:flex-row gap-8 sm:gap-12 items-start justify-between mb-8 sm:mb-16 pl-4 border-l-2 border-stone-800">
                <div className="max-w-md">
-                 <h3 className="text-xl sm:text-3xl font-black text-zinc-900 mb-2 sm:mb-4 tracking-tighter uppercase italic text-nowrap">
+                 <h3 className="text-xl sm:text-3xl font-extrabold text-stone-800 mb-2 sm:mb-4 tracking-tighter uppercase italic text-nowrap">
                    SPEC_MODULE // 0x0{activeTab + 1}
                  </h3>
-                 <p className="text-sm sm:text-lg text-zinc-500 font-medium leading-relaxed">
+                 <p className="text-sm sm:text-lg text-stone-500 font-medium leading-relaxed">
                    {techGroups[activeTab].description}
                  </p>
                </div>
                
                <div className="hidden md:flex flex-col gap-1 items-end pt-2">
-                 <span className="text-[10px] font-mono text-zinc-300 uppercase tracking-[0.3em]">Revision: 04.0b</span>
-                 <span className="text-[10px] font-mono text-zinc-300 uppercase tracking-[0.3em]">Datum: Grid.7.4</span>
+                 <span className="text-[10px] font-mono text-stone-300 uppercase tracking-[0.3em]">Revision: 04.0b</span>
+                 <span className="text-[10px] font-mono text-stone-300 uppercase tracking-[0.3em]">Datum: Grid.7.4</span>
                </div>
             </div>
 
@@ -123,13 +123,13 @@ export const Tech = () => {
                   key={idx}
                   className="group flex flex-col items-center gap-3 sm:gap-4 cursor-default"
                 >
-                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-zinc-50 border border-zinc-100 group-hover:bg-white group-hover:border-zinc-900 group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md">
+                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-stone-50 border border-stone-100 group-hover:bg-[#fcfaf8] group-hover:border-stone-800 group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md">
                     {/* Minimal Leader Lines on Hover */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 w-[1px] h-4 bg-zinc-900 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 w-[1px] h-4 bg-stone-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     
-                    <Icon className="h-6 w-6 sm:h-10 sm:w-10 text-zinc-400 group-hover:text-zinc-900 transition-colors duration-500" stroke={1.5} />
+                    <Icon className="h-6 w-6 sm:h-10 sm:w-10 text-stone-400 group-hover:text-stone-800 transition-colors duration-500" stroke={1.5} />
                   </div>
-                  <span className="font-mono text-[8px] sm:text-[10px] text-zinc-500 uppercase tracking-widest group-hover:text-zinc-900 transition-colors text-center px-1">
+                  <span className="font-mono text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest group-hover:text-stone-800 transition-colors text-center px-1">
                     {name}
                   </span>
                 </div>

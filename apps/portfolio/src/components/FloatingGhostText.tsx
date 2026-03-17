@@ -17,7 +17,7 @@ export default function FloatingGhostText() {
       {ghostWords.map((word, index) => (
         <motion.div
           key={index}
-          className={`absolute font-black text-zinc-900/[0.04] uppercase tracking-[0.3em] ${word.size} z-10`}
+          className={`absolute font-extrabold text-stone-800/[0.04] uppercase tracking-[0.3em] ${word.size} z-10`}
           style={{ top: word.top, left: word.left, fontFamily: "'Google Sans Flex', sans-serif" }}
           initial={{ opacity: 0, y: 20 }}
           animate={{

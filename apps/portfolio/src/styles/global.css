@@ -1,28 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --color-theme-background: #ffffff;
-  --color-theme-text: #09090b;
-  --color-theme-muted: #71717a;
-  --color-grid-line: rgba(9, 9, 11, 0.04);
+  --color-theme-background: #f5f1ea;
+  --color-theme-text: #1a1918;
+  --color-theme-muted: #787470;
 }
 
+/* ── Base ─────────────────────────────────────────────────── */
 @layer base {
   html {
     background-color: var(--color-theme-background);
-    background-image: 
-      linear-gradient(var(--color-grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-attachment: fixed;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+  color: var(--color-theme-text);
+}
+
+body {
+  background: transparent;
+  color: var(--color-theme-text);
+  overflow-x: hidden;
+}
+
+/* ── Utilities ────────────────────────────────────────────── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .animate-popIn {
     animation: popIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
@@ -39,28 +46,40 @@
   }
 }
 
-html {
-  scroll-behavior: smooth;
-  color: var(--color-theme-text);
+/* ══════════════════════════════════════════════════════════
+   AUTHENTIC ROUGH PAPER BACKGROUND
+   Uses a real seamless texture image blending over a warm base.
+══════════════════════════════════════════════════════════ */
+
+/* Layer 1: The actual seamless image textures */
+.paper-layer-texture {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.85; /* stronger */
+  background-image: url('/images/dust.png'), url('/images/cream-paper.png');
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
 }
 
-body {
-  background: transparent;
-  color: var(--color-theme-text);
-  overflow-x: hidden;
+/* Layer 2: A very subtle vignette to add depth and focus to the center */
+.paper-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 40%,
+    rgba(130, 110, 90, 0.08) 80%,
+    rgba(100, 80, 60, 0.15) 100%
+  );
+  mix-blend-mode: multiply;
 }
 
-/* Base scrollbar for better light mode aesthetics */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #f9fafb;
-}
-::-webkit-scrollbar-thumb {
-  background: #e4e4e7;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #d4d4d8;
-}
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #fdfdfc; }
+::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }

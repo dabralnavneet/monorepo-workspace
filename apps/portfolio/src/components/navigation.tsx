@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useMotionValue, useSpring } from 'motion/react';
 import { IconHome, IconBriefcase, IconTool, IconMail, IconRocket } from '@tabler/icons-react';
 
 const navItems = [
@@ -11,6 +11,61 @@ const navItems = [
   { id: 'experience', label: 'Experience', icon: IconBriefcase },
   { id: 'contact', label: 'Contact', icon: IconMail },
 ];
+
+// ── Magnetic Button ────────────────────────────────────────────
+function MagneticButton({
+  children,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+  'aria-label': ariaLabel,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  'aria-label': string;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const x = useSpring(rawX, { stiffness: 200, damping: 18 });
+  const y = useSpring(rawY, { stiffness: 200, damping: 18 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) * 0.35;
+    const dy = (e.clientY - cy) * 0.35;
+    rawX.set(dx);
+    rawY.set(dy);
+  };
+
+  const handleMouseLeave = () => {
+    rawX.set(0);
+    rawY.set(0);
+    onMouseLeave();
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x, y }}
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative p-3 sm:p-4 rounded-xl flex items-center justify-center group flex-col focus:outline-none"
+      aria-label={ariaLabel}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
 
 export default function Navigation() {
   const [activeSection, setActiveSection] = useState('home');
@@ -87,7 +142,7 @@ export default function Navigation() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
-        className="flex items-center gap-2 px-3 py-3 bg-white/70 backdrop-blur-2xl border border-zinc-200/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
+        className="flex items-center gap-2 px-3 py-3 bg-[#fcfaf8]/70 backdrop-blur-2xl border border-stone-200/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
       >
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -95,19 +150,18 @@ export default function Navigation() {
           const isHovered = hoveredSection === item.id;
 
           return (
-            <button
+            <MagneticButton
               key={item.id}
               onClick={() => scrollToSection(item.id)}
               onMouseEnter={() => setHoveredSection(item.id)}
               onMouseLeave={() => setHoveredSection(null)}
-              className="relative p-3 sm:p-4 rounded-xl flex items-center justify-center group flex-col focus:outline-none"
               aria-label={`Navigate to ${item.label}`}
             >
               {/* Active Pill Animation Background */}
               {isActive && (
                 <motion.div
                   layoutId="active-pill"
-                  className="absolute inset-0 bg-zinc-900 border border-zinc-900 rounded-xl"
+                  className="absolute inset-0 bg-stone-800 border border-stone-800 rounded-xl"
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
@@ -116,7 +170,7 @@ export default function Navigation() {
               {isHovered && !isActive && (
                 <motion.div
                   layoutId="hover-pill"
-                  className="absolute inset-0 bg-zinc-100 border border-zinc-200 rounded-xl"
+                  className="absolute inset-0 bg-stone-100 border border-stone-200 rounded-xl"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -129,7 +183,7 @@ export default function Navigation() {
                 className={`relative z-10 transition-all duration-300 ${
                   isActive 
                     ? 'text-white' 
-                    : 'text-zinc-500 group-hover:text-zinc-900 group-hover:scale-105'
+                    : 'text-stone-500 group-hover:text-stone-800 group-hover:scale-105'
                 }`}
                 stroke={isActive ? 2 : 1.5}
               />
@@ -143,14 +197,14 @@ export default function Navigation() {
                   scale: isHovered ? 1 : 0.9
                 }}
                 transition={{ duration: 0.2 }}
-                className="absolute -top-10 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-medium text-white whitespace-nowrap pointer-events-none shadow-xl"
+                className="absolute -top-10 px-3 py-1.5 bg-stone-800 border border-stone-800 rounded-lg text-xs font-medium text-white whitespace-nowrap pointer-events-none shadow-xl"
               >
                 {item.label}
               </motion.div>
               
               {/* Active Dot Indicator */}
-              <div className={`absolute bottom-1 w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-zinc-400 opacity-100' : 'bg-transparent opacity-0'}`} />
-            </button>
+              <div className={`absolute bottom-1 w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-stone-400 opacity-100' : 'bg-transparent opacity-0'}`} />
+            </MagneticButton>
           );
         })}
       </motion.div>

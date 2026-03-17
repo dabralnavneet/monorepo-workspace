@@ -117,23 +117,34 @@ export const Tech = () => {
                </div>
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12">
-              {techGroups[activeTab].technologies.map(({ Icon, name }, idx) => (
-                <div
-                  key={idx}
-                  className="group flex flex-col items-center gap-3 sm:gap-4 cursor-default"
-                >
-                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-stone-50 border border-stone-100 group-hover:bg-[#fcfaf8] group-hover:border-stone-800 group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md">
-                    {/* Minimal Leader Lines on Hover */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 w-[1px] h-4 bg-stone-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    
-                    <Icon className="h-6 w-6 sm:h-10 sm:w-10 text-stone-400 group-hover:text-stone-800 transition-colors duration-500" stroke={1.5} />
+            {/* Circular Orbit Layout */}
+            <div className="relative w-full h-[350px] sm:h-[450px] flex items-center justify-center mt-4 sm:mt-12 mb-8 sm:mb-16">
+              {/* Subtle orbital ring background */}
+              <div className="absolute w-[240px] h-[240px] sm:w-[340px] sm:h-[340px] rounded-full border border-stone-200 border-dashed opacity-50"></div>
+              
+              {/* Center decorative core */}
+              <div className="absolute w-12 h-12 rounded-full border border-stone-300 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-stone-400"></div>
+              </div>
+
+              {techGroups[activeTab].technologies.map(({ Icon }, idx) => {
+                const total = techGroups[activeTab].technologies.length;
+                const angle = (idx / total) * 360;
+                
+                return (
+                  <div
+                    key={idx}
+                    className="absolute top-1/2 left-1/2 group cursor-default"
+                    style={{
+                      transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(calc(-1 * clamp(120px, 25vw, 170px))) rotate(-${angle}deg)`
+                    }}
+                  >
+                    <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-[#fdfbf9] border border-stone-200 group-hover:bg-[#fcfaf8] group-hover:border-stone-800 group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md z-10">
+                      <Icon className="h-6 w-6 sm:h-10 sm:w-10 text-stone-400 group-hover:text-stone-800 transition-colors duration-500" stroke={1.5} />
+                    </div>
                   </div>
-                  <span className="font-mono text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-widest group-hover:text-stone-800 transition-colors text-center px-1">
-                    {name}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         </AnimatePresence>

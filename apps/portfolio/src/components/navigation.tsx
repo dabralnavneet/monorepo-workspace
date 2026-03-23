@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
-import { IconHome, IconBriefcase, IconTool, IconMail, IconRocket } from '@tabler/icons-react';
+import { IconHome, IconBriefcase, IconTool, IconMail, IconRocket, IconPencil } from '@tabler/icons-react';
 
 const navItems = [
-  { id: 'home', label: 'Home', icon: IconHome },
-  { id: 'prototypes', label: 'Products', icon: IconRocket },
-  { id: 'toolkit', label: 'Toolkit', icon: IconTool },
-  { id: 'experience', label: 'Experience', icon: IconBriefcase },
-  { id: 'contact', label: 'Contact', icon: IconMail },
+  { id: 'home', label: 'Home', icon: IconHome, path: '/' },
+  { id: 'prototypes', label: 'Products', icon: IconRocket, path: '/#prototypes' },
+  { id: 'toolkit', label: 'Toolkit', icon: IconTool, path: '/#toolkit' },
+  { id: 'experience', label: 'Experience', icon: IconBriefcase, path: '/#experience' },
+  { id: 'thoughts', label: 'Thoughts', icon: IconPencil, path: '/thoughts' },
+  { id: 'contact', label: 'Contact', icon: IconMail, path: '/#contact' },
 ];
 
 // ── Magnetic Button ────────────────────────────────────────────
@@ -73,6 +74,12 @@ export default function Navigation() {
 
   useEffect(() => {
     const handleScroll = () => {
+      // If we are on the thoughts page, keep "thoughts" active and skip scroll spy
+      if (window.location.pathname.startsWith('/thoughts')) {
+        setActiveSection('thoughts');
+        return;
+      }
+
       const currentScrollY = window.scrollY;
 
       // Check if we are at the bottom of the page (for Contact)
@@ -117,10 +124,21 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
+  const scrollToSection = (item: typeof navItems[0]) => {
+    // If we're not on the main page, or if the path is to another page, do a hard navigation
+    if (window.location.pathname !== '/' || !item.path.startsWith('/#')) {
+      if (item.path === '/') {
+         window.location.href = '/';
+         return;
+      }
+      window.location.href = item.path;
+      return;
+    }
+
+    // Normal smooth scroll logic for same-page anchors
+    const element = document.getElementById(item.id);
     if (element) {
-      if (sectionId === 'home') {
+      if (item.id === 'home') {
         window.scrollTo({
           top: 0,
           behavior: 'smooth',
@@ -152,7 +170,7 @@ export default function Navigation() {
           return (
             <MagneticButton
               key={item.id}
-              onClick={() => scrollToSection(item.id)}
+              onClick={() => scrollToSection(item)}
               onMouseEnter={() => setHoveredSection(item.id)}
               onMouseLeave={() => setHoveredSection(null)}
               aria-label={`Navigate to ${item.label}`}

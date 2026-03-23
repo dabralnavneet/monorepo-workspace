@@ -1,0 +1,77 @@
+---
+import Layout from './Layout.astro';
+import Navigation from '../components/navigation';
+
+const { frontmatter } = Astro.props;
+---
+<Layout title={`${frontmatter.title} | Navneet Dabral`}>
+  <Navigation client:load />
+  
+  <div class="paper-layer-texture" aria-hidden="true"></div>
+  <div class="paper-vignette" aria-hidden="true"></div>
+
+  <main class="relative z-10 w-full max-w-3xl mx-auto px-6 py-32 min-h-screen text-stone-800 selection:bg-stone-800/10">
+    <a href="/thoughts" class="inline-flex items-center text-sm font-mono text-stone-400 hover:text-stone-800 transition-colors mb-12 uppercase tracking-widest">
+      ← Back to Archive
+    </a>
+
+    <article class="prose prose-stone prose-lg max-w-none">
+      <header class="mb-16">
+        <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tighter text-stone-800 mb-6" style="font-family: 'Google Sans Flex', sans-serif;">
+          {frontmatter.title}
+        </h1>
+        <div class="flex items-center gap-4 text-stone-500 font-mono text-xs uppercase tracking-widest border-b border-stone-200 pb-8">
+          <span>{frontmatter.date}</span>
+          <span>•</span>
+          <span>{frontmatter.readTime || '5 min read'}</span>
+        </div>
+      </header>
+      
+      <div class="leading-relaxed">
+        <slot />
+      </div>
+    </article>
+  </main>
+</Layout>
+
+<style is:global>
+  .prose p {
+    color: #57534e; /* stone-500 */
+    margin-bottom: 2rem;
+    line-height: 1.8;
+  }
+  .prose h2 {
+    color: #1c1917; /* stone-800 */
+    font-size: 1.875rem;
+    font-weight: 800;
+    margin-top: 3.5rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.025em;
+  }
+  .prose a {
+    color: #1c1917;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    transition: all 0.2s;
+  }
+  .prose a:hover {
+    color: #a8a29e;
+  }
+  .prose strong {
+    color: #1c1917;
+    font-weight: 700;
+  }
+  .prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 2rem;
+    color: #57534e;
+  }
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+  .prose li strong {
+    color: #1c1917;
+  }
+</style>

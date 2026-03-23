@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLD Masterclass | High Level System Design Tutorial</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <span>HLD Masterclass</span>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item active" data-lesson="intro">
+                        <span>🏠</span> Introduction
+                    </li>
+                    <li class="nav-item" data-lesson="load-balancer">
+                        <span>⚖️</span> Load Balancing
+                    </li>
+                    <li class="nav-item" data-lesson="caching">
+                        <span>⚡</span> Caching Layer
+                    </li>
+                    <li class="nav-item" data-lesson="scaling">
+                        <span>📈</span> Database Scaling
+                    </li>
+                    <li class="nav-item" data-lesson="microservices">
+                        <span>🧩</span> Microservices
+                    </li>
+                    <li class="nav-item" data-lesson="async">
+                        <span>🚀</span> Asynchronous Processing
+                    </li>
+                    <li class="nav-item" data-lesson="cdn">
+                        <span>🌐</span> CDN & Global Scaling
+                    </li>
+                    <li class="nav-item" data-lesson="cap">
+                        <span>📐</span> CAP Theorem
+                    </li>
+                    <li class="nav-divider"></li>
+                    <li class="nav-item" data-lesson="cheatsheet">
+                        <span>📝</span> Interview Cheat Sheet
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="breadcrumb">Lesson > <span id="current-lesson-name">Introduction</span></div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="visualization">Visualization</button>
+                    <button class="tab-btn" data-tab="deepdive">Interview Deep Dive</button>
+                </div>
+                <div class="controls">
+                    <button class="btn" id="run-sim">Animate System</button>
+                </div>
+            </header>
+
+            <section class="content-body">
+                <div id="visualization-tab" class="tab-content active">
+                    <canvas id="canvas"></canvas>
+                    
+                    <div class="info-panel" id="info-panel">
+                        <h2 id="lesson-title">System Design Basics</h2>
+                        <p id="lesson-desc">High-level design (HLD) describes the overall architecture of a system. It identifies the components and how they interact with each other.</p>
+                        <div class="concept-cards" id="concept-details">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="deepdive-tab" class="tab-content">
+                    <div class="glass-card deep-dive-container">
+                        <h2>Interview Deep Dive</h2>
+                        <div id="deep-dive-content">
+                            <!-- Dynamic interview content -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

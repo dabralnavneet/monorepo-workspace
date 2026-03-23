@@ -15,7 +15,8 @@
     "db:callbackos:push": "turbo db:push --filter=@callbackos/database",
     "db:callbackos:migrate": "turbo db:migrate --filter=@callbackos/database",
     "clean": "turbo clean",
-    "dev:digital-twin": "turbo dev --filter=@digital-twin/*"
+    "dev:digital-twin": "turbo dev --filter=@digital-twin/*",
+    "dev:civic": "turbo dev --filter=@civic-navigator/web"
   },
   "engines": {
     "node": ">=18.0.0"

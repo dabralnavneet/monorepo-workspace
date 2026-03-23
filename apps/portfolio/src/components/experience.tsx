@@ -8,7 +8,7 @@ export default function WorkExperience() {
         <div className="relative group">
           {/* Timeline Node */}
           <div className="absolute -left-[37px] sm:-left-[85px] top-0 w-9 sm:w-14 h-9 sm:h-14 rounded-full bg-[#fcfaf8] border border-stone-200 flex items-center justify-center overflow-hidden z-20 group-hover:border-stone-800 transition-colors duration-500 shadow-sm">
-            <img src="/images/bmw.png" alt="BMW" className="w-full h-full object-cover" />
+            <img src="/images/bmw.png" alt="BMW" className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 mix-blend-multiply" />
           </div>
           
           <div className="flex flex-col gap-2">
@@ -38,7 +38,7 @@ export default function WorkExperience() {
         {/* C2FO */}
         <div className="relative group">
           <div className="absolute -left-[37px] sm:-left-[85px] top-0 w-9 sm:w-14 h-9 sm:h-14 rounded-full bg-[#fcfaf8] border border-stone-200 flex items-center justify-center overflow-hidden z-20 group-hover:border-stone-800 transition-colors duration-500 shadow-sm">
-            <img src="/images/c2fo.png" alt="C2FO" className="w-7 sm:w-10 h-7 sm:h-10 object-contain" />
+            <img src="/images/c2fo.png" alt="C2FO" className="w-7 sm:w-10 h-7 sm:h-10 object-contain grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 mix-blend-multiply" />
           </div>
           
           <div className="flex flex-col gap-2">
@@ -71,7 +71,7 @@ export default function WorkExperience() {
         {/* Reliance Jio */}
         <div className="relative group">
           <div className="absolute -left-[37px] sm:-left-[85px] top-0 w-9 sm:w-14 h-9 sm:h-14 rounded-full bg-[#fcfaf8] border border-stone-200 flex items-center justify-center overflow-hidden z-20 group-hover:border-stone-800 transition-colors duration-500 shadow-sm">
-            <img src="/images/jio.png" alt="Reliance Jio" className="w-full h-full object-cover" />
+            <img src="/images/jio.png" alt="Reliance Jio" className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 mix-blend-multiply" />
           </div>
           
           <div className="flex flex-col gap-2">

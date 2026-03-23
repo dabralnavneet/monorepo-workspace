@@ -103,26 +103,76 @@ export const Tech = () => {
           >
 
 
-            {/* Circular Orbit Layout */}
-            <div className="relative w-full max-w-3xl mx-auto h-[350px] sm:h-[450px] flex items-center justify-center mt-4 sm:mt-12 mb-8 sm:mb-16">
-              {techGroups[activeTab].technologies.map(({ Icon }, idx) => {
-                const total = techGroups[activeTab].technologies.length;
-                const angle = (idx / total) * 360;
-                
-                return (
-                  <div
-                    key={idx}
-                    className="absolute top-1/2 left-1/2 group cursor-default"
-                    style={{
-                      transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(calc(-1 * clamp(120px, 25vw, 170px))) rotate(-${angle}deg)`
-                    }}
-                  >
-                    <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-[#fdfbf9] border border-stone-200 group-hover:bg-[#fcfaf8] group-hover:border-stone-800 group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md z-10">
-                      <Icon className="h-6 w-6 sm:h-10 sm:w-10 text-stone-400 group-hover:text-stone-800 transition-colors duration-500" stroke={1.5} />
-                    </div>
+            {/* Architectural Orrery Layout */}
+            <div className="relative w-full max-w-3xl mx-auto h-[400px] sm:h-[500px] flex items-center justify-center mt-4 sm:mt-8 mb-8 sm:mb-16">
+              
+              {/* Outer Orbit Ring */}
+              <div 
+                className="absolute w-[280px] h-[280px] sm:w-[420px] sm:h-[420px] rounded-full border border-stone-300 border-dashed opacity-50"
+                style={{ animation: 'spin 60s linear infinite' }}
+              ></div>
+              
+              {/* Inner Orbit Ring */}
+              <div 
+                className="absolute w-[160px] h-[160px] sm:w-[260px] sm:h-[260px] rounded-full border border-stone-200"
+              ></div>
+              
+              {/* Central Mechanical Core */}
+              <div className="absolute z-0 w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-[#fdfbf9] flex items-center justify-center shadow-inner border border-stone-100">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-stone-200 border-dashed flex items-center justify-center p-2" style={{ animation: 'spin 30s linear infinite reverse' }}>
+                  <div className="w-full h-full rounded-full bg-stone-100 flex items-center justify-center">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-stone-800 shadow-[0_0_15px_rgba(28,25,23,0.5)] animate-pulse"></div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
+
+              {/* Orbiting Planets (Technologies) */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ animation: 'spin 40s linear infinite' }}
+              >
+                {techGroups[activeTab].technologies.map(({ Icon, name }, idx) => {
+                  const total = techGroups[activeTab].technologies.length;
+                  const angle = (idx / total) * 360;
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className="absolute group cursor-default z-10"
+                      style={{
+                        transform: `rotate(${angle}deg) translateY(calc(-1 * clamp(140px, 28vw, 210px)))`
+                      }}
+                      onMouseEnter={(e) => {
+                        const parent = e.currentTarget.parentElement;
+                        const reverse = e.currentTarget.children[0] as HTMLElement;
+                        if (parent) parent.style.animationPlayState = 'paused';
+                        if (reverse) reverse.style.animationPlayState = 'paused';
+                      }}
+                      onMouseLeave={(e) => {
+                        const parent = e.currentTarget.parentElement;
+                        const reverse = e.currentTarget.children[0] as HTMLElement;
+                        if (parent) parent.style.animationPlayState = 'running';
+                        if (reverse) reverse.style.animationPlayState = 'running';
+                      }}
+                    >
+                      <div style={{ animation: 'spin 40s linear infinite reverse' }}>
+                        <div style={{ transform: `rotate(-${angle}deg)` }}>
+                          <div className="relative w-14 h-14 sm:w-[72px] sm:h-[72px] flex items-center justify-center rounded-full bg-[#fcfaf8] border border-stone-300 group-hover:bg-stone-800 group-hover:border-stone-800 group-hover:scale-110 transition-all duration-300 shadow-sm z-10">
+                            <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-stone-500 group-hover:text-stone-100 transition-colors duration-300" stroke={1.5} />
+                            
+                            {/* Sleek Hover Badge */}
+                            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 whitespace-nowrap pointer-events-none">
+                              <span className="px-3 py-1.5 bg-[#fdfbf9] border border-stone-200 text-stone-600 text-[10px] font-mono uppercase tracking-widest rounded shadow-md">
+                                {name}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>

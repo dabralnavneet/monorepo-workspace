@@ -1,85 +1,25 @@
 @import "tailwindcss";
 
-@theme {
-  --color-theme-background: #f5f1ea;
-  --color-theme-text: #1a1918;
-  --color-theme-muted: #787470;
-}
-
-/* ── Base ─────────────────────────────────────────────────── */
-@layer base {
-  html {
-    background-color: var(--color-theme-background);
-  }
-}
-
 html {
+  background: #000;
+  color: #fafafa;
   scroll-behavior: smooth;
-  color: var(--color-theme-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: transparent;
-  color: var(--color-theme-text);
+  background: #000;
   overflow-x: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* ── Utilities ────────────────────────────────────────────── */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .animate-popIn {
-    animation: popIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
+::selection {
+  background: #fafafa;
+  color: #000;
 }
 
-@keyframes popIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* ══════════════════════════════════════════════════════════
-   AUTHENTIC ROUGH PAPER BACKGROUND
-   Uses a real seamless texture image blending over a warm base.
-══════════════════════════════════════════════════════════ */
-
-/* Layer 1: The actual seamless image textures */
-.paper-layer-texture {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.85; /* stronger */
-  background-image: url('/images/dust.png'), url('/images/cream-paper.png');
-  background-repeat: repeat;
-  mix-blend-mode: multiply;
-}
-
-/* Layer 2: A very subtle vignette to add depth and focus to the center */
-.paper-vignette {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(
-    circle at 50% 50%,
-    transparent 40%,
-    rgba(130, 110, 90, 0.08) 80%,
-    rgba(100, 80, 60, 0.15) 100%
-  );
-  mix-blend-mode: multiply;
-}
-
-/* ── Scrollbar ────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #fdfdfc; }
-::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #333; }

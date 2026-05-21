@@ -1,159 +1,39 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Navigation from '../components/navigation';
-import { Tech } from '../components/tech';
-import WorkExperience from '../components/experience';
-import Container from '../components/container';
-import FloatingGhostText from '../components/FloatingGhostText';
-import ProductPrototypes from '../components/prototypes';
-import CinematicHero from '../components/CinematicHero';
-import { ChapterDivider, ScrollReveal, StatCallout } from '../components/StoryComponents';
-import { IconBrandLinkedin, IconBrandX, IconMail } from '@tabler/icons-react';
+import Nav from '../components/Nav';
+import Hero from '../components/Hero';
+import Articles from '../components/Articles';
+import Contact from '../components/Contact';
 
-// Calculate years of experience
-const currentDate = new Date();
-const date2019 = new Date('2019-07-01');
-let differenceInMonths =
-  (currentDate.getFullYear() - date2019.getFullYear()) * 12 +
-  (currentDate.getMonth() - date2019.getMonth());
-if (currentDate.getDate() < date2019.getDate()) differenceInMonths--;
-const years = Math.floor(differenceInMonths / 12);
-const months = differenceInMonths % 12;
+const startDate = new Date('2019-07-01');
+const now = new Date();
+let months =
+  (now.getFullYear() - startDate.getFullYear()) * 12 +
+  (now.getMonth() - startDate.getMonth());
+if (now.getDate() < startDate.getDate()) months--;
+const years = Math.floor(months / 12);
+
+const posts = await Astro.glob('./thoughts/*.md');
+const articles = posts
+  .sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).getTime() -
+      new Date(a.frontmatter.date).getTime(),
+  )
+  .map((post) => ({
+    url: post.url ?? '#',
+    title: post.frontmatter.title,
+    description: post.frontmatter.description,
+    date: post.frontmatter.date,
+    readTime: post.frontmatter.readTime ?? '5 min read',
+  }));
 ---
 
-<Layout title="Home | Navneet Dabral">
-  <main class="relative flex flex-col items-center overflow-hidden min-h-screen text-stone-800 selection:bg-stone-800/10">
-    
-    <!-- Navigation -->
-    <Navigation client:load />
-
-    <!-- Real Seamless Paper Texture Background -->
-    <div class="paper-layer-texture" aria-hidden="true"></div>
-    <div class="paper-vignette" aria-hidden="true"></div>
-
-    <!-- ══════════════════════════════════════════════════
-         OPENING ACT — Cinematic Hero
-    ══════════════════════════════════════════════════ -->
-    <section id="home" class="relative w-full min-h-[100dvh] overflow-hidden flex flex-col items-center justify-center pb-20 z-10 px-4">
-      <CinematicHero client:load years={years} months={months} />
-    </section>
-
-    <!-- ══════════════════════════════════════════════════
-         THE NUMBERS — Impact Stats Bridge
-    ══════════════════════════════════════════════════ -->
-    <div class="relative z-10 w-full border-y border-stone-100 bg-[#fcfaf8]/60 backdrop-blur-sm py-8 sm:py-12">
-      <div class="max-w-4xl mx-auto px-6 flex flex-wrap justify-center items-center gap-2 sm:gap-0 sm:divide-x divide-zinc-100">
-        <StatCallout client:load number="6+" label="Years Engineering" delay={0} />
-        <StatCallout client:load number="25%" label="Conversion Lift" delay={0.1} />
-        <StatCallout client:load number="60%" label="LCP Improvement" delay={0.2} />
-        <StatCallout client:load number="100k+" label="Users Shipped To" delay={0.3} />
-        <StatCallout client:load number="3" label="Iconic Companies" delay={0.4} />
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════
-         NARRATIVE CONTENT AREA
-    ══════════════════════════════════════════════════ -->
-    <div class="relative z-10 w-full">
-      <Container client:load>
-        <div class="flex flex-col w-full">
-
-          <!-- Chapter 1: Product Prototypes -->
-          <section id="prototypes" style="scroll-margin-top: 0px;">
-            <ChapterDivider
-              client:load
-              number="Chapter 01"
-              title="Things I've Built."
-              subtitle="Side projects are where engineers reveal their real taste. Here's what I obsess over outside of work."
-            />
-            <div class="pb-20 sm:pb-32">
-              <ProductPrototypes client:load />
-            </div>
-          </section>
-
-          <!-- Chapter 2: Toolkit -->
-          <section id="toolkit" style="scroll-margin-top: 0px;">
-            <ChapterDivider
-              client:load
-              number="Chapter 02"
-              title="How I Think."
-              subtitle="Tools are just tools. What matters is knowing which one to reach for, and when to put them down."
-            />
-            <div class="pb-20 sm:pb-32">
-              <Tech client:load />
-            </div>
-          </section>
-
-          <!-- Chapter 3: Experience -->
-          <section id="experience" style="scroll-margin-top: 0px;">
-            <ChapterDivider
-              client:load
-              number="Chapter 03"
-              title="The Journey."
-              subtitle="Jio → C2FO → BMW. Every company a bigger stage, a harder problem, a better engineer."
-            />
-            <div class="pb-20 sm:pb-32">
-              <WorkExperience client:load />
-            </div>
-          </section>
-
-        </div>
-      </Container>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════
-         EPILOGUE — Footer / Contact
-    ══════════════════════════════════════════════════ -->
-    <footer id="contact" class="relative w-full border-t border-stone-200 bg-stone-50 pt-16 pb-32 sm:pb-40 z-10 overflow-hidden">
-      <div class="max-w-4xl mx-auto px-6 lg:px-8 relative z-10">
-        
-        <!-- Epilogue heading -->
-        <ScrollReveal client:load className="text-center mb-16">
-          <p class="font-mono text-xs text-stone-400 uppercase tracking-[0.3em] mb-4">Epilogue</p>
-          <h2
-            class="text-4xl sm:text-6xl font-extrabold tracking-tighter text-stone-800"
-            style="font-family: 'Google Sans Flex', sans-serif;"
-          >
-            What's Next.
-          </h2>
-          <p class="mt-4 text-stone-500 max-w-md mx-auto text-sm leading-relaxed">
-            I'm always open to conversations about ambitious products, interesting engineering problems, or ideas worth shipping. Let's talk.
-          </p>
-        </ScrollReveal>
-
-        <!-- Social links row -->
-        <ScrollReveal client:load delay={0.2} className="flex justify-center items-center gap-4 mb-12">
-          <a
-            target="_blank"
-            href="https://linkedin.com/in/navneet-dabral-859707117"
-            rel="noopener noreferrer"
-            class="group p-4 rounded-xl bg-[#fcfaf8] border border-stone-200 hover:bg-stone-800 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md text-stone-400"
-          >
-            <IconBrandLinkedin size={22} stroke={1.5} client:load />
-          </a>
-          <a 
-            target="_blank" 
-            href="https://twitter.com/medabral" 
-            rel="noopener noreferrer"
-            class="group p-4 rounded-xl bg-[#fcfaf8] border border-stone-200 hover:bg-stone-800 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md text-stone-400"
-          >
-            <IconBrandX size={22} stroke={1.5} client:load />
-          </a>
-          <a 
-            href="mailto:dabralnavneet@gmail.com" 
-            class="group px-6 py-4 rounded-xl bg-stone-800 text-white font-mono text-xs uppercase tracking-widest hover:bg-stone-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-center gap-2"
-          >
-            <IconMail size={18} stroke={1.5} client:load />
-            Start a Conversation
-          </a>
-        </ScrollReveal>
-
-        <!-- Bottom bar -->
-        <div class="pt-8 border-t border-stone-200 flex flex-col md:flex-row justify-between items-center gap-4 text-stone-400 text-xs font-mono">
-          <p>© {new Date().getFullYear()} NAVNEET DABRAL. ALL RIGHTS RESERVED.</p>
-          <p>CRAFTED WITH <span class="text-stone-800">ANTIGRAVITY</span></p>
-        </div>
-      </div>
-    </footer>
+<Layout title="Navneet Dabral — Senior Software Engineer">
+  <Nav client:load />
+  <main>
+    <Hero client:load years={years} />
+    <Articles client:load articles={articles} />
+    <Contact client:load />
   </main>
 </Layout>

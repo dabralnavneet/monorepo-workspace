@@ -1,0 +1,220 @@
+---
+import Layout from './Layout.astro';
+import GuideSidebar from '../components/GuideSidebar';
+import { getAwsSaaSidebar } from '../lib/aws-saa-curriculum';
+import { awsTopicIcons } from '../lib/aws-topic-icons';
+
+const { frontmatter } = Astro.props;
+
+const { domains, flatPublished } = getAwsSaaSidebar();
+const currentIndex = flatPublished.findIndex((p) => p.order === frontmatter.order);
+const prevPart = currentIndex > 0 ? flatPublished[currentIndex - 1] : null;
+const nextPart = currentIndex >= 0 && currentIndex < flatPublished.length - 1 ? flatPublished[currentIndex + 1] : null;
+const TopicIcon = awsTopicIcons[frontmatter.order];
+---
+
+<Layout title={`${frontmatter.title} | Navneet Dabral`}>
+  <main class="w-full min-h-screen">
+    <GuideSidebar client:load domains={domains} currentOrder={frontmatter.order} />
+
+    <div class="lg:pl-56">
+      <div class="max-w-2xl mx-auto px-6 pt-10 pb-24 md:pb-32">
+        <div class="flex items-center gap-2 text-zinc-600 font-mono text-xs uppercase tracking-[0.2em] mb-14">
+          <a href="/guides" class="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200">guides</a>
+          <span>/</span>
+          <a href="/guides/aws-saa" class="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200">aws saa</a>
+          {currentIndex >= 0 && (
+            <>
+              <span>/</span>
+              <span class="text-zinc-500 dark:text-zinc-400">part {frontmatter.order}</span>
+            </>
+          )}
+        </div>
+
+        <article>
+          <header class="mb-14">
+            <div class="flex items-center gap-4 text-zinc-600 font-mono text-xs uppercase tracking-[0.2em] mb-6">
+              <span>{frontmatter.domain}</span>
+              <span class="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-700 inline-block"></span>
+              <span>{frontmatter.readTime ?? '5 min read'}</span>
+            </div>
+            <h1 class="flex items-center gap-4 text-3xl md:text-5xl font-semibold text-black dark:text-white tracking-tight leading-tight">
+              {TopicIcon && <TopicIcon width={40} height={40} title={frontmatter.title} />}
+              {frontmatter.title}
+            </h1>
+          </header>
+
+      <div class="prose-dark">
+        <slot />
+      </div>
+    </article>
+
+        <div class="flex items-center justify-between gap-6 mt-20 pt-8 border-t border-zinc-200 dark:border-zinc-900">
+          {prevPart ? (
+            <a
+              href={prevPart.url ?? '#'}
+              class="group flex flex-col text-left text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200"
+            >
+              <span class="font-mono text-xs uppercase tracking-[0.2em] mb-1">← previous</span>
+              <span class="text-sm text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors duration-200">{prevPart.title}</span>
+            </a>
+          ) : <span />}
+          {nextPart ? (
+            <a
+              href={nextPart.url ?? '#'}
+              class="group flex flex-col text-right text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200"
+            >
+              <span class="font-mono text-xs uppercase tracking-[0.2em] mb-1">next →</span>
+              <span class="text-sm text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors duration-200">{nextPart.title}</span>
+            </a>
+          ) : <span />}
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style is:global>
+  .prose-dark p {
+    color: #52525b;
+    margin-bottom: 1.75rem;
+    line-height: 1.85;
+    font-size: 1rem;
+  }
+  html.dark .prose-dark p {
+    color: #a1a1aa;
+  }
+  .prose-dark h2 {
+    color: #18181b;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 3rem;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+  html.dark .prose-dark h2 {
+    color: #e4e4e7;
+  }
+  .prose-dark h3 {
+    color: #27272a;
+    font-size: 1.15rem;
+    font-weight: 500;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+  html.dark .prose-dark h3 {
+    color: #d4d4d8;
+  }
+  .prose-dark a {
+    color: #18181b;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: #d4d4d8;
+    transition: text-decoration-color 0.2s;
+  }
+  html.dark .prose-dark a {
+    color: #e4e4e7;
+    text-decoration-color: #3f3f46;
+  }
+  .prose-dark a:hover {
+    text-decoration-color: #71717a;
+  }
+  html.dark .prose-dark a:hover {
+    text-decoration-color: #a1a1aa;
+  }
+  .prose-dark strong {
+    color: #18181b;
+    font-weight: 500;
+  }
+  html.dark .prose-dark strong {
+    color: #e4e4e7;
+  }
+  .prose-dark em {
+    color: #52525b;
+    font-style: italic;
+  }
+  html.dark .prose-dark em {
+    color: #a1a1aa;
+  }
+  .prose-dark ul,
+  .prose-dark ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1.75rem;
+    color: #52525b;
+  }
+  html.dark .prose-dark ul,
+  html.dark .prose-dark ol {
+    color: #a1a1aa;
+  }
+  .prose-dark li {
+    margin-bottom: 0.5rem;
+    line-height: 1.7;
+  }
+  .prose-dark blockquote {
+    border-left: 2px solid #d4d4d8;
+    padding-left: 1.25rem;
+    margin: 2rem 0;
+    color: #71717a;
+    font-style: italic;
+  }
+  html.dark .prose-dark blockquote {
+    border-left-color: #27272a;
+  }
+  .prose-dark code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: #27272a;
+    background: #efefef;
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+  }
+  html.dark .prose-dark code {
+    color: #d4d4d8;
+    background: #111;
+  }
+  .prose-dark hr {
+    border-color: #e4e4e7;
+    margin: 3rem 0;
+  }
+  html.dark .prose-dark hr {
+    border-color: #18181b;
+  }
+  .prose-dark .icon-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #18181b;
+  }
+  html.dark .prose-dark .icon-row {
+    color: #e4e4e7;
+  }
+  .prose-dark .icon-row svg {
+    flex-shrink: 0;
+  }
+  .prose-dark table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.75rem;
+    font-size: 0.9rem;
+  }
+  .prose-dark th,
+  .prose-dark td {
+    border: 1px solid #d4d4d8;
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    color: #52525b;
+  }
+  html.dark .prose-dark th,
+  html.dark .prose-dark td {
+    border-color: #27272a;
+    color: #a1a1aa;
+  }
+  .prose-dark th {
+    color: #18181b;
+    font-weight: 600;
+  }
+  html.dark .prose-dark th {
+    color: #e4e4e7;
+  }
+</style>

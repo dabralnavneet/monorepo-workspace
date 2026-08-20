@@ -12,7 +12,7 @@ export default function Contact() {
   return (
     <footer
       id="contact"
-      className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-24 md:py-32 border-t border-zinc-900"
+      className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-24 md:py-32 border-t border-zinc-200 dark:border-zinc-900"
     >
       {/* Section header */}
       <motion.div
@@ -22,9 +22,9 @@ export default function Contact() {
         transition={{ duration: 0.5 }}
         className="flex items-center gap-6 mb-16 md:mb-20"
       >
-        <span className="text-zinc-700 font-mono text-xs">02</span>
-        <span className="text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">Contact</span>
-        <div className="flex-1 h-px bg-zinc-900" />
+        <span className="text-zinc-400 dark:text-zinc-700 font-mono text-xs">03</span>
+        <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">Contact</span>
+        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-900" />
       </motion.div>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 md:gap-20">
@@ -35,7 +35,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl md:text-6xl font-semibold text-white tracking-tighter leading-none mb-4"
+            className="text-4xl md:text-6xl font-semibold text-black dark:text-white tracking-tighter leading-none mb-4"
           >
             Say hello.
           </motion.h2>
@@ -44,7 +44,7 @@ export default function Contact() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-zinc-500 text-sm leading-relaxed max-w-xs"
+            className="text-zinc-600 dark:text-zinc-500 text-sm leading-relaxed max-w-xs"
           >
             Open to interesting engineering problems, ambitious products, and conversations worth having.
           </motion.p>
@@ -64,9 +64,9 @@ export default function Contact() {
               href={link.href}
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noopener noreferrer' : undefined}
-              className="group flex items-center gap-3 text-zinc-500 font-mono text-sm hover:text-zinc-200 transition-colors duration-200"
+              className="group flex items-center gap-3 text-zinc-600 dark:text-zinc-500 font-mono text-sm hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
             >
-              <span className="w-4 h-px bg-zinc-800 group-hover:w-6 group-hover:bg-zinc-500 transition-all duration-300" />
+              <span className="w-4 h-px bg-zinc-300 dark:bg-zinc-800 group-hover:w-6 group-hover:bg-zinc-500 transition-all duration-300" />
               {link.label}
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs">↗</span>
             </a>
@@ -80,7 +80,7 @@ export default function Contact() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="mt-16 md:mt-24 pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-zinc-700 font-mono text-xs"
+        className="mt-16 md:mt-24 pt-8 border-t border-zinc-200 dark:border-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-zinc-400 dark:text-zinc-700 font-mono text-xs"
       >
         <span>NAVNEET DABRAL</span>
         <span>© {new Date().getFullYear()}</span>

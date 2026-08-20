@@ -1,0 +1,59 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "NACLs"
+description: "The stateless, subnet-level firewall that evaluates rules in numbered order — the opposite of a Security Group."
+domain: "Networking"
+order: 12
+date: "Aug 20, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVpcNetworkAccessControlList } from "@aws-icons/react/resource";
+
+export const naclIcon = awsIconDataUri(AmazonVpcNetworkAccessControlList);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Security Groups protect individual resources, but sometimes you need a blanket rule at the **subnet boundary** itself — e.g. explicitly blocking a known-bad IP range for every resource in a subnet, regardless of its security group. A **Network ACL (NACL)** solves this: it's a stateless firewall attached to a subnet that evaluates numbered rules in order, and unlike security groups, it supports **explicit deny** rules.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A NACL is created inside a VPC (regional) but is **associated with one or more subnets** — its actual effect is at the subnet (AZ) level.
+- Every subnet is associated with **exactly one NACL** at a time; a NACL can be associated with **multiple subnets**.
+- Every VPC has a **default NACL** that allows all inbound and outbound traffic, associated automatically with any subnet you don't explicitly assign elsewhere.
+
+<Mermaid
+  chart={`graph TD
+  Internet(("Internet")) --> NACL["NACL: rule 100 allow 443, rule 200 deny 1.2.3.0/24, * deny all"]
+  NACL --> SG["Security Group (stateful, allow-only)"]
+  SG --> EC2["EC2 Instance"]
+  classDef nacl fill:#fde8e8,stroke:#dc2626,stroke-width:3px,color:#7f1d1d`}
+  nodeIcons={{ NACL: [naclIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+NACLs are **free** — no charge for creating them, associating them with subnets, or the number of rules within default quotas.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- NACLs are **stateless**: if you allow inbound port 443, you must **also** explicitly allow the outbound ephemeral port range (typically 1024–65535) for return traffic — nothing is automatic, unlike Security Groups.
+- Rules are evaluated **in numbered order, lowest number first**, and processing **stops at the first match** — order matters, unlike Security Groups where all rules are combined.
+- NACLs support **explicit allow and explicit deny** rules — the only mechanism in a VPC that can outright block specific traffic (e.g. a known-malicious CIDR) regardless of security group settings.
+- The default (implicit) final rule on every NACL is `* deny all` — anything not matched by an earlier rule is dropped.
+- Typical exam pairing: use a **Security Group** for normal application-level access control, and reach for a **NACL** only when you need a coarse, subnet-wide explicit block.

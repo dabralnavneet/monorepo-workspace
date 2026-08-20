@@ -1,0 +1,66 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "VPN"
+description: "An encrypted tunnel over the public internet connecting your network to a VPC — fast to set up, but internet-dependent."
+domain: "Networking"
+order: 14
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsSiteToSiteVpn } from "@aws-icons/react/architecture-service";
+import {
+  AmazonVpcVpnGateway,
+  AmazonVpcCustomerGateway,
+} from "@aws-icons/react/resource";
+
+export const vpnIcon = awsIconDataUri(AwsSiteToSiteVpn);
+export const vgwIcon = awsIconDataUri(AmazonVpcVpnGateway);
+export const cgwIcon = awsIconDataUri(AmazonVpcCustomerGateway);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Companies with existing on-premises networks need a secure way to connect them to a VPC without exposing everything to the public internet directly. **AWS Site-to-Site VPN** solves this by establishing an encrypted **IPsec tunnel** between your on-premises router (the Customer Gateway) and AWS (the Virtual Private Gateway or Transit Gateway) over the public internet — fast to provision, but subject to internet variability.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A **Virtual Private Gateway (VGW)** is attached to one VPC (regional); a **Customer Gateway (CGW)** represents your on-premises side.
+- Each Site-to-Site VPN connection provisions **two tunnels** across two different AWS endpoints for redundancy — you should configure your on-premises router to use both.
+- **AWS Client VPN** is a separate, related service for connecting individual remote _users_ (not whole networks) securely to AWS or on-premises resources.
+
+<Mermaid
+  chart={`graph LR
+  ONPREM["On-Premises Network"] --> CGW["Customer Gateway"]
+  CGW <-->|"IPsec Tunnel 1"| VGW["Virtual Private Gateway"]
+  CGW <-->|"IPsec Tunnel 2"| VGW
+  VGW --> VPC["VPC"]
+  classDef vpc fill:transparent,stroke:#8b3de0,stroke-width:3px
+  class VPC vpc`}
+  nodeIcons={{ CGW: [cgwIcon], VGW: [vgwIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Site-to-Site VPN bills an **hourly charge per VPN connection** plus standard **data transfer out** rates. It's significantly cheaper and faster to provision than Direct Connect, but shares bandwidth with the public internet, so throughput and latency aren't guaranteed.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Site-to-Site VPN can be **up and running in minutes**, versus **weeks** for Direct Connect — the classic exam trade-off is "need it fast" (VPN) vs. "need guaranteed bandwidth" (Direct Connect).
+- A **VPN CloudHub** design lets multiple on-premises sites connect redundantly to a single VGW, forming a hub-and-spoke network entirely over VPN.
+- You can run Site-to-Site VPN **as a backup path** alongside a primary Direct Connect connection for resilience — a common "what if Direct Connect fails" exam scenario.
+- **Client VPN** vs. **Site-to-Site VPN**: Client VPN connects individual devices/users; Site-to-Site VPN connects two whole networks.

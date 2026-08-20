@@ -1,0 +1,60 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "DNS in VPC"
+description: "How name resolution works inside a VPC, and the two settings that control it."
+domain: "Networking"
+order: 9
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonRoute53Resolver } from "@aws-icons/react/resource";
+import { AmazonVirtualPrivateCloud } from "@aws-icons/react/architecture-service";
+
+export const resolverIcon = awsIconDataUri(AmazonRoute53Resolver);
+export const vpcIcon = awsIconDataUri(AmazonVirtualPrivateCloud);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Instances need to resolve names to IPs — both public internet names and other AWS resources' internal DNS names. Building and running your own DNS resolver for this is unnecessary busywork. AWS solves it with the **VPC DNS Resolver** (formerly "Amazon-provided DNS"), an AWS-managed resolver automatically available inside every VPC, reachable at the **base of the VPC CIDR range plus two** (e.g. `10.0.0.2` for a `10.0.0.0/16` VPC).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- The VPC Resolver is available to every subnet in the VPC (regional scope) at the same fixed address (CIDR base + 2), not tied to an AZ.
+- Two **per-VPC settings** control DNS behavior: `enableDnsSupport` (does the VPC resolver work at all) and `enableDnsHostnames` (do instances get public/private DNS hostnames assigned).
+- **Route 53 Private Hosted Zones** extend this further, letting you resolve custom domain names privately within one or more associated VPCs.
+
+<Mermaid
+  chart={`graph LR
+  EC2["EC2 Instance"] -->|"DNS query"| RES["VPC Resolver (CIDR base + 2)"]
+  RES -->|"public names"| Internet(("Public DNS"))
+  RES -->|"private zone names"| PHZ["Route 53 Private Hosted Zone"]
+  classDef res fill:#f3ecfb,stroke:#8b3de0,stroke-width:3px,color:#3a1a5c`}
+  nodeIcons={{ RES: [resolverIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+The built-in VPC Resolver is **free** for standard query volumes. **Route 53 Resolver endpoints** (used for hybrid DNS with on-premises networks) and **Private Hosted Zones** have their own separate, modest charges.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Both `enableDnsSupport` and `enableDnsHostnames` must be **true** for an instance in a public subnet to receive a resolvable **public DNS hostname** — a very common exam gotcha when a public IP exists but the public hostname doesn't resolve.
+- The default VPC has both settings enabled out of the box; a **custom VPC** does not always have `enableDnsHostnames` on by default and it's worth checking explicitly.
+- For **hybrid DNS** (on-premises resolving AWS private names, or vice versa), you need **Route 53 Resolver inbound/outbound endpoints** — the built-in VPC resolver alone can't be reached from outside the VPC.
+- A **Private Hosted Zone** can be associated with **multiple VPCs**, even across accounts, enabling shared internal DNS namespaces.

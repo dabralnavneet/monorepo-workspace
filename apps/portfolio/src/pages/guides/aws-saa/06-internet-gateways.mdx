@@ -1,0 +1,63 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Internet Gateways"
+description: "The one component that gives an entire VPC a way in and out to the public internet."
+domain: "Networking"
+order: 6
+date: "Aug 20, 2026"
+readTime: "4 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVpcInternetGateway } from "@aws-icons/react/resource";
+import { AmazonVirtualPrivateCloud } from "@aws-icons/react/architecture-service";
+
+export const igwIcon = awsIconDataUri(AmazonVpcInternetGateway);
+export const vpcIcon = awsIconDataUri(AmazonVirtualPrivateCloud);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+A VPC is isolated by design — nothing inside it can reach the public internet, and nothing on the internet can reach it, until you explicitly punch a hole through. An **Internet Gateway (IGW)** solves this: it's a horizontally-scaled, redundant, highly-available AWS-managed component that performs **NAT for instances with public IPs** and provides the actual path for internet traffic in and out of the VPC.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An Internet Gateway is attached to **exactly one VPC at a time** (regional scope) — it is not tied to any single AZ or subnet.
+- It has **no bandwidth constraints of its own** and requires no capacity planning — AWS handles scaling and redundancy behind the scenes.
+- A subnet only becomes "public" once its route table sends `0.0.0.0/0` traffic to the attached IGW.
+
+<Mermaid
+  chart={`graph LR
+  Internet(("Internet")) <--> IGW["Internet Gateway"]
+  IGW <--> VPC["VPC"]
+  VPC --> SUB["Public Subnet"]
+  classDef vpc fill:transparent,stroke:#8b3de0,stroke-width:3px
+  classDef subnet fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class VPC vpc
+  class SUB subnet`}
+  nodeIcons={{ IGW: [igwIcon], VPC: [vpcIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Creating and attaching an Internet Gateway is **free**. You only pay standard **data transfer out** rates for traffic that actually leaves AWS through it — there's no hourly charge for the gateway itself (unlike a NAT Gateway).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Exactly **one IGW per VPC**, and an IGW can only be attached to **one VPC at a time**.
+- The IGW performs **1:1 NAT** between an instance's private IP and its associated public/Elastic IP — the instance's OS never sees the public address directly.
+- Forgetting to add the `0.0.0.0/0 → IGW` route (or forgetting the security group/NACL rule) is the single most common reason an instance "can't reach the internet" despite having a public IP — always check the route table first.
+- An IGW alone does **not** allow private subnets to reach the internet — that requires a **NAT Gateway** instead.

@@ -1,0 +1,65 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Route 53 Application Recovery Controller"
+description: "Taking manual, deliberate control of failover decisions when automated DNS health checks aren't enough."
+domain: "Networking"
+order: 24
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonApplicationRecoveryController } from "@aws-icons/react/architecture-service";
+import {
+  AmazonRoute53RoutingControls,
+  AmazonRoute53ReadinessChecks,
+} from "@aws-icons/react/resource";
+
+export const arcIcon = awsIconDataUri(AmazonApplicationRecoveryController);
+export const routingIcon = awsIconDataUri(AmazonRoute53RoutingControls);
+export const readinessIcon = awsIconDataUri(AmazonRoute53ReadinessChecks);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Automated DNS health checks are great for straightforward failures, but during a real incident, operators often need to **manually and deliberately** shift traffic away from a degraded region — with a control plane that is itself independent of the very systems that might be failing. **Route 53 Application Recovery Controller (ARC)** solves this with **routing controls** (simple on/off switches for traffic, backed by a highly available control plane across multiple regions) and **readiness checks** that continuously verify a standby region actually has the capacity to take over before you need it.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- ARC's control plane is deliberately built to run **independently across multiple AWS regions**, so it stays operable even if one region is having the exact outage you're recovering from.
+- **Routing controls** are simple, safe on/off switches tied into Route 53 health checks that determine which endpoints receive traffic.
+- **Readiness checks** continuously audit resources (capacity, configuration parity) in a standby region against defined resource sets, so you know failover will actually work _before_ you need it.
+
+<Mermaid
+  chart={`graph TD
+  Op(("Operator")) -->|"toggle"| RC["Routing Control"]
+  RC --> HC["Route 53 Health Check"]
+  HC --> R53["Route 53 DNS"]
+  RDY["Readiness Check"] -.->|"continuously audits"| Standby["Standby Region"]
+  classDef control fill:#f3ecfb,stroke:#8b3de0,stroke-width:3px,color:#3a1a5c`}
+  nodeIcons={{ RC: [routingIcon], RDY: [readinessIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+ARC bills a **monthly charge per cluster** (the resource hosting your routing controls) plus charges for **readiness checks** performed — a small addition on top of standard Route 53 costs, aimed at organizations with serious disaster-recovery requirements.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- ARC exists specifically for **multi-region disaster recovery** scenarios where you need **fast, reliable, manually-triggered failover** — distinguish it from plain Route 53 Failover routing, which is automated and health-check-driven only.
+- **Routing controls** are intentionally simple (binary on/off) so the failover mechanism itself has as few moving parts as possible during an incident — simplicity is the safety feature.
+- **Readiness checks** catch "your DR region silently drifted out of sync" _before_ a real failover, which is the scenario that most often turns a disaster recovery plan into a second disaster.
+- ARC is part of the broader Route 53 family but is a **distinct, purpose-built resilience tool** — expect the exam to test recognizing _when_ ARC is the right answer versus plain Route 53 health checks/failover routing.

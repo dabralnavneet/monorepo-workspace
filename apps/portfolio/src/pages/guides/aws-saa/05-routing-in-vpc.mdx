@@ -1,0 +1,65 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Routing in VPC"
+description: "The route table is the only thing that decides where a packet leaving a subnet actually goes."
+domain: "Networking"
+order: 5
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AmazonVpcRouter,
+  AmazonVpcInternetGateway,
+} from "@aws-icons/react/resource";
+
+export const routerIcon = awsIconDataUri(AmazonVpcRouter);
+export const igwIcon = awsIconDataUri(AmazonVpcInternetGateway);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Having subnets, gateways, and peering connections means nothing without a mechanism to decide _which path_ traffic takes to leave a subnet. A **route table** solves this: it's an ordered list of destination CIDR blocks mapped to a "target" (a gateway, peering connection, NAT device, etc.). Every packet leaving a subnet is matched against this table using **longest-prefix-match** to decide where it goes next.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Route tables are created **inside a VPC** (regional scope) but are **associated with individual subnets** (AZ-level effect) — each subnet uses exactly one route table at a time.
+- Every VPC has one **main route table** created automatically; any subnet you don't explicitly associate with a custom route table uses the main one.
+- A single route table can be associated with **multiple subnets**, even across different AZs.
+
+<Mermaid
+  chart={`graph LR
+  RT["Route Table: 0.0.0.0/0 to IGW, 10.0.0.0/16 to local"] --> SUBa["Subnet AZ-a"]
+  RT --> SUBb["Subnet AZ-b"]
+  RT --> IGW["Internet Gateway"]
+  classDef rt fill:#f3ecfb,stroke:#8b3de0,stroke-width:3px,color:#3a1a5c
+  classDef subnet fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class RT rt
+  class SUBa,SUBb subnet`}
+  nodeIcons={{ RT: [routerIcon], IGW: [igwIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Route tables and routes are **free** — there's no charge for the table itself, only for whatever the routes actually send traffic through (NAT Gateway processing, Direct Connect ports, cross-AZ transfer, etc.).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Every route table has an implicit, un-removable **local route** for the VPC's own CIDR (and any secondary CIDRs) — this is what allows resources inside the VPC to talk to each other.
+- Routing uses **longest-prefix-match**, not first-match — a more specific route (e.g. `/24`) always wins over a broader one (e.g. `/16`) regardless of table order.
+- A subnet is "public" purely because its route table sends `0.0.0.0/0` to an **Internet Gateway** — there's no separate "make this subnet public" flag.
+- You can have **up to 200 route tables per VPC** (default quota) and up to 50 routes per table (both increasable).

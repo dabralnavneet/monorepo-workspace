@@ -1,0 +1,63 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Transit Gateway"
+description: "A central network hub that replaces an unmanageable full-mesh of VPC peering connections with a single attachment per VPC."
+domain: "Networking"
+order: 18
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsTransitGateway } from "@aws-icons/react/architecture-service";
+import { AmazonVirtualPrivateCloud } from "@aws-icons/react/architecture-service";
+
+export const tgwIcon = awsIconDataUri(AwsTransitGateway);
+export const vpcIcon = awsIconDataUri(AmazonVirtualPrivateCloud);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Connecting 10 VPCs with peering alone would require 45 individual peering connections (and _n(n-1)/2_ route table entries to manage). A **Transit Gateway** solves this by acting as a central, regional network hub: every VPC (or VPN, or Direct Connect connection) attaches to it **once**, and the Transit Gateway routes traffic between all attachments — turning a full mesh into a simple hub-and-spoke.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A Transit Gateway is a **regional** resource, but **Transit Gateway peering** lets you connect Transit Gateways across regions.
+- Each VPC attaches via a **Transit Gateway attachment**, placed in one or more subnets (one per AZ you want reachable).
+- Unlike VPC Peering, traffic **is transitive** through a Transit Gateway — if A and B are both attached, they can reach each other without a direct connection between them.
+
+<Mermaid
+  chart={`graph TD
+  TGW["Transit Gateway"] --- A["VPC A"]
+  TGW --- B["VPC B"]
+  TGW --- C["VPC C"]
+  TGW --- VPN["Site-to-Site VPN"]
+  TGW --- DX["Direct Connect"]
+  classDef vpc fill:transparent,stroke:#8b3de0,stroke-width:2px
+  class A,B,C vpc`}
+  nodeIcons={{ TGW: [tgwIcon], A: [vpcIcon], B: [vpcIcon], C: [vpcIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Transit Gateway bills an **hourly charge per attachment** plus a **per-GB data processing charge** for traffic that flows through it — conceptually similar to a NAT Gateway's pricing model, but per attachment rather than per gateway.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Transitivity** is the headline difference vs. VPC Peering — this is the #1 reason the exam picks Transit Gateway over "just peer everything" once 3+ VPCs are involved.
+- **Route tables on the Transit Gateway itself** (separate from VPC route tables) let you segment which attachments can talk to which others — e.g. isolating a "quarantine" VPC.
+- Transit Gateway supports attaching VPCs, VPNs, and Direct Connect (via a Direct Connect Gateway) all into **one unified hub** — a common exam scenario for hybrid, multi-VPC architectures.
+- It also supports **multicast** and **inter-region peering**, both niche but occasionally tested facts.

@@ -1,0 +1,68 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Load Balancers"
+description: "Distributing traffic across many targets so no single instance becomes the bottleneck or the single point of failure."
+domain: "Networking"
+order: 13
+date: "Aug 20, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  ElasticLoadBalancingApplicationLoadBalancer,
+  ElasticLoadBalancingNetworkLoadBalancer,
+} from "@aws-icons/react/resource";
+import { AmazonEc2 } from "@aws-icons/react/architecture-service";
+
+export const albIcon = awsIconDataUri(
+  ElasticLoadBalancingApplicationLoadBalancer,
+);
+export const nlbIcon = awsIconDataUri(ElasticLoadBalancingNetworkLoadBalancer);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+A single server is both a bottleneck and a single point of failure. A **Load Balancer** solves this by sitting in front of a fleet of targets (EC2 instances, containers, Lambda functions, IPs), distributing incoming traffic across them, and continuously **health-checking** targets so traffic never routes to an unhealthy one.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An Elastic Load Balancer is a **regional** resource, but it operates by placing nodes into **multiple AZs** you select — you must enable at least one subnet per AZ you want it to serve.
+- **Application Load Balancer (ALB)** operates at Layer 7 (HTTP/HTTPS) — routes by host, path, headers; ideal for microservices and container-based apps.
+- **Network Load Balancer (NLB)** operates at Layer 4 (TCP/UDP/TLS) — ultra-low latency, millions of requests/sec, and supports a **static IP per AZ**.
+
+<Mermaid
+  chart={`graph LR
+  Internet(("Internet")) --> ALB["Application Load Balancer"]
+  ALB --> T1["Target: EC2 AZ-a"]
+  ALB --> T2["Target: EC2 AZ-b"]
+  ALB -.->|"health check"| T1
+  ALB -.->|"health check"| T2`}
+  nodeIcons={{ ALB: [albIcon], T1: [ec2Icon], T2: [ec2Icon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Load balancers bill an **hourly charge** plus **Load Balancer Capacity Units (LCUs)** based on actual usage (new connections, active connections, bandwidth, and for ALBs, rule evaluations). There's no per-target charge — cost scales with traffic, not fleet size.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **ALB** understands HTTP semantics: path-based routing (`/api/*` vs `/images/*`), host-based routing, and native **WebSocket**/HTTP2 support — the default choice for modern web apps and microservices.
+- **NLB** is the choice when you need a **static IP** (or Elastic IP) per AZ, extreme performance, or non-HTTP protocols — common exam trigger words are "static IP" and "millions of requests per second."
+- The older **Classic Load Balancer (CLB)** is legacy — the exam expects you to know it exists but to always prefer ALB/NLB for new designs.
+- Load balancers require **at least two AZs/subnets** enabled to be considered highly available — a single-subnet ALB is a common exam "what's wrong with this design" trap.
+- A **Gateway Load Balancer (GWLB)** is a separate, third type used for deploying third-party virtual appliances (firewalls, IDS/IPS) transparently in the traffic path.

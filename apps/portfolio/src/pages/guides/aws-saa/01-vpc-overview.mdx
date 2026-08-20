@@ -1,0 +1,80 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "VPC Overview"
+description: "Your own isolated slice of the AWS network — the foundation every other networking service builds on."
+domain: "Networking"
+order: 1
+date: "Aug 20, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVirtualPrivateCloud } from "@aws-icons/react/architecture-service";
+import { PublicSubnet } from "@aws-icons/react/architecture-group";
+
+export const vpcIcon = awsIconDataUri(AmazonVirtualPrivateCloud);
+export const subnetIcon = awsIconDataUri(PublicSubnet);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+A **VPC (Virtual Private Cloud)** is a logically isolated, private network inside AWS where you control the IP address range, subnets, route tables, and gateways. Before VPCs existed, every AWS customer shared one flat network (EC2-Classic). A VPC solves that by giving each account its own private, customizable network boundary — so you can design a topology (public web tier, private app tier, isolated database tier) the same way you would on-premises.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A VPC is a **Regional** resource — it spans _all_ Availability Zones in that region, but never crosses regions.
+- **Subnets** (created inside a VPC) are **AZ-specific** — each subnet lives in exactly one AZ.
+- Route tables, network ACLs, and internet/NAT gateways are scoped to the VPC (regional), while the resources placed inside subnets are pinned to a single AZ.
+
+<Mermaid
+  chart={`graph TD
+  subgraph Region["AWS Region"]
+    subgraph VPC["VPC — 10.0.0.0/16"]
+      subgraph AZ1["Availability Zone A"]
+        SUB1["Subnet 10.0.1.0/24"]
+      end
+      subgraph AZ2["Availability Zone B"]
+        SUB2["Subnet 10.0.2.0/24"]
+      end
+    end
+  end
+  classDef subnet fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class SUB1 subnet
+  class SUB2 subnet`}
+  clusterColors={{
+    Region: { stroke: "#2e8b3d" },
+    VPC: { stroke: "#8b3de0" },
+    AZ1: { stroke: "#3b82f6", dashed: true },
+    AZ2: { stroke: "#3b82f6", dashed: true },
+  }}
+  nodeIcons={{
+    VPC: [vpcIcon],
+    SUB1: [subnetIcon],
+    SUB2: [subnetIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+The VPC itself is **free** — you're not charged for creating a VPC, subnets, route tables, or a security group. Charges only appear when you attach billable resources: NAT Gateways (hourly + per-GB processed), idle Elastic IPs, VPN connections, Direct Connect ports, Transit Gateway attachments, and cross-AZ/cross-region data transfer.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Every AWS account gets a **default VPC** per region (with a default subnet in each AZ) so EC2 instances can launch without any networking setup.
+- A VPC CIDR block can range from **/16 (65,536 IPs) to /28 (16 IPs)**.
+- You can add up to **5 CIDR blocks** per VPC (1 primary + 4 secondary), but you **cannot resize** the primary block after creation.
+- IPv6 support is optional and additive — you keep IPv4 and can add an Amazon-provided or BYOIP IPv6 CIDR.
+- Know the difference between VPC-level constructs (route tables, NACLs, IGW) and AZ-level constructs (subnets, and anything placed inside them like EC2, RDS).

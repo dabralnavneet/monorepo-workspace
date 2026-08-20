@@ -1,0 +1,70 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Custom VPC"
+description: "Building your own network topology from scratch instead of accepting AWS's default layout."
+domain: "Networking"
+order: 2
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVirtualPrivateCloud } from "@aws-icons/react/architecture-service";
+
+export const vpcIcon = awsIconDataUri(AmazonVirtualPrivateCloud);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+The **default VPC** in every account is a one-size-fits-all network AWS creates for you automatically, with a fixed CIDR and a public subnet in every AZ. That's convenient for a quick test, but real architectures need control: a specific IP range that doesn't collide with your on-premises network, subnets carved exactly where you want them, and route tables/gateways you design deliberately. A **custom VPC** solves this by giving you a blank network canvas — nothing exists inside it until you build it.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A custom VPC is a **Regional** resource, exactly like the default VPC — it never spans regions.
+- Unlike the default VPC, a custom VPC starts **completely empty**: no subnets, no internet gateway, no non-local route table entries. You add each piece yourself.
+- You choose the CIDR block (ideally a private RFC 1918 range that doesn't overlap anything you might later VPC-peer or connect via VPN/Direct Connect to).
+
+<Mermaid
+  chart={`graph LR
+  subgraph Default["Default VPC"]
+    D1["Public Subnet AZ-a"]
+    D2["Public Subnet AZ-b"]
+    DGW["Internet Gateway (attached)"]
+  end
+  subgraph Custom["Custom VPC — blank canvas"]
+    C1["No subnets yet"]
+  end
+  classDef default fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef empty fill:transparent,stroke:#8b3de0,stroke-width:2px,stroke-dasharray: 6 4,color:#3a1a5c
+  class D1,D2,DGW default
+  class C1 empty`}
+  clusterColors={{
+    Default: { stroke: "#2e8b3d" },
+    Custom: { stroke: "#8b3de0", dashed: true },
+  }}
+  nodeIcons={{ Default: [vpcIcon], Custom: [vpcIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Creating a custom VPC is **free**, same as the default VPC. All the usual caveats apply: NAT Gateways, VPN/Direct Connect, idle Elastic IPs, and cross-AZ/region data transfer are what actually generate charges once you start attaching resources.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- You can have **up to 5 VPCs per region** by default — a soft limit you can raise via a service quota increase request.
+- A custom VPC has **no internet gateway attached** and **no public route** until you explicitly create and attach one — it is private by default.
+- DNS settings (`enableDnsSupport` and `enableDnsHostnames`) are **enabled by default on the default VPC** but must be checked/enabled explicitly on a custom VPC if you need instances to get public DNS hostnames.
+- Choosing a non-overlapping CIDR up front matters most when you plan to **VPC peer** or connect to on-premises networks — overlapping ranges block peering entirely.

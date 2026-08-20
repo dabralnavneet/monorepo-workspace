@@ -1,0 +1,60 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "CloudFront"
+description: "AWS's global CDN — caching content at edge locations close to users so it never has to travel back to the origin."
+domain: "Networking"
+order: 20
+date: "Aug 20, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonCloudFront } from "@aws-icons/react/architecture-service";
+import { AmazonCloudFrontEdgeLocation } from "@aws-icons/react/resource";
+
+export const cfIcon = awsIconDataUri(AmazonCloudFront);
+export const edgeIcon = awsIconDataUri(AmazonCloudFrontEdgeLocation);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Serving every user request from a single origin region means users far from that region get slow load times, and the origin bears the full traffic load. **Amazon CloudFront** solves this: a global **Content Delivery Network (CDN)** that caches your content (static assets, and even dynamic content with the right cache rules) at hundreds of **edge locations** worldwide, serving users from the location closest to them.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- CloudFront is a **global** service — a single distribution is deployed to edge locations across the entire CloudFront network, not tied to one region.
+- The **origin** (S3 bucket, ALB, EC2, or any custom HTTP endpoint) still lives in a specific region — CloudFront just fronts it globally.
+- **Edge locations** (200+) are separate from **Regional Edge Caches**, a mid-tier caching layer between edge locations and the origin that reduces origin load for less-popular content.
+
+<Mermaid
+  chart={`graph LR
+  User1(("User: Asia")) --> Edge1["Edge Location"]
+  User2(("User: Europe")) --> Edge2["Edge Location"]
+  Edge1 -.->|"cache miss"| Origin["Origin: S3 / ALB"]
+  Edge2 -.->|"cache miss"| Origin`}
+  nodeIcons={{ Edge1: [edgeIcon], Edge2: [edgeIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+CloudFront bills based on **data transfer out to users** (priced per edge-location region) and **number of HTTP/HTTPS requests** — no charge for the distribution itself. Data transfer from an AWS origin (S3, ALB) _to_ CloudFront is free, which is one reason CloudFront in front of S3 is often cheaper than serving S3 directly.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Origin Access Control (OAC)** (successor to OAI) restricts an S3 origin bucket so it's **only** reachable through CloudFront, not directly — a very common secure-static-website exam pattern.
+- CloudFront supports **field-level encryption**, **signed URLs/cookies** for private content, and integrates with **AWS WAF** for edge-level request filtering.
+- Cache behavior is controlled by **TTL settings and cache keys** (headers, query strings, cookies) — the exam often tests "why isn't my content updating," which is almost always a caching/invalidation issue.
+- CloudFront can front **any** HTTP origin, not just AWS ones — including on-premises servers — making it useful for hybrid and multi-cloud content delivery too.

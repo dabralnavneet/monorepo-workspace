@@ -1,0 +1,59 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Elastic IP"
+description: "A static public IPv4 address you own, decoupled from any specific instance's lifecycle."
+domain: "Networking"
+order: 10
+date: "Aug 20, 2026"
+readTime: "4 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2ElasticIpAddress } from "@aws-icons/react/resource";
+import { AmazonEc2 } from "@aws-icons/react/architecture-service";
+
+export const eipIcon = awsIconDataUri(AmazonEc2ElasticIpAddress);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+A regular public IP assigned to an EC2 instance is released the moment you stop or terminate it — if you restart the instance, you get a **new** public IP, breaking any DNS records or firewall rules pointing at the old one. An **Elastic IP (EIP)** solves this by giving you a static public IPv4 address that you own and control independently of any instance's lifecycle — you can attach it, detach it, and re-attach it to a different instance at will.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An Elastic IP is allocated to your account **within a specific region** — it cannot be attached to a resource in a different region.
+- It can be attached to (and moved between) any instance or network interface **within that same region**, regardless of AZ.
+- Elastic IPs are also required by, and attached to, other regional resources like NAT Gateways.
+
+<Mermaid
+  chart={`graph LR
+  EIP["Elastic IP (static)"] -.->|"attach/detach"| EC2a["EC2 Instance A"]
+  EIP -.->|"re-attach later"| EC2b["EC2 Instance B"]
+  classDef eip fill:#f3ecfb,stroke:#8b3de0,stroke-width:3px,color:#3a1a5c`}
+  nodeIcons={{ EIP: [eipIcon], EC2a: [ec2Icon], EC2b: [ec2Icon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+An Elastic IP is **free while it's actively attached to a running resource**. AWS charges an hourly fee for **idle Elastic IPs** — ones that are allocated but not attached to anything, or attached to a stopped instance — specifically to discourage hoarding scarce IPv4 addresses.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- By default you're limited to **5 Elastic IPs per region** per account (a soft limit, increasable via support request).
+- Remembering to **release unused Elastic IPs** is a classic cost-optimization exam scenario — "why is my bill higher after I stopped all my instances?" is almost always an idle EIP (or an idle NAT Gateway).
+- An EIP is **not** the same as a public IP auto-assigned at launch — the auto-assigned one changes on stop/start, an EIP does not.
+- Moving an EIP between instances is nearly instant and is a common technique for **quick failover** — pointing traffic at a standby instance without changing DNS.

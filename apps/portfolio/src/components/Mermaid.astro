@@ -1,0 +1,104 @@
+---
+interface Props {
+  chart: string;
+  // Maps a subgraph id (e.g. "Region") to a border/fill color — mermaid's own
+  // classDef/style directives don't reliably reach cluster (subgraph) borders.
+  clusterColors?: Record<string, { stroke: string; fill?: string; dashed?: boolean }>;
+  // Maps a node/subgraph id to one or more icon data URIs, drawn as a badge
+  // straddling the box's top-left corner (the AWS architecture-diagram convention).
+  // Mermaid always centers label content, so this can't be done via the label text itself.
+  nodeIcons?: Record<string, string[]>;
+}
+
+const { chart, clusterColors, nodeIcons } = Astro.props;
+---
+
+<pre
+  class="mermaid not-prose my-8 rounded-xl border border-zinc-200 dark:border-zinc-900 bg-zinc-100/60 dark:bg-zinc-950/60 p-4"
+  data-cluster-colors={clusterColors ? JSON.stringify(clusterColors) : undefined}
+  data-node-icons={nodeIcons ? JSON.stringify(nodeIcons) : undefined}
+>{chart}</pre>
+
+<script>
+  import mermaid from 'mermaid';
+
+  const isDark = document.documentElement.classList.contains('dark');
+  // 'handDrawn' uses rough.js under the hood for an Excalidraw-style sketchy look.
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDark ? 'dark' : 'default',
+    look: 'handDrawn',
+    // Transparent cluster fill avoids a heavy hachure background clashing with the page.
+    themeVariables: { clusterBkg: 'transparent', clusterBorder: 'transparent', fontSize: '17px' },
+    flowchart: { padding: 24, nodeSpacing: 45, rankSpacing: 55 },
+  });
+
+  const preEls = Array.from(document.querySelectorAll<HTMLElement>('.mermaid'));
+  await mermaid.run({ querySelector: '.mermaid' });
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  preEls.forEach((preEl) => {
+    const svg = preEl.querySelector('svg');
+    if (!svg) return;
+
+    // rough.js bakes stroke-width into each shape's own attributes at draw time,
+    // so neither CSS nor themeVariables can override it — patch the DOM directly.
+    svg.querySelectorAll('.node *, .cluster *, .edgePath path').forEach((el) => {
+      if (el.hasAttribute('stroke-width') || el.tagName === 'path' || el.tagName === 'rect') {
+        el.setAttribute('stroke-width', '4');
+        const stroke = el.getAttribute('stroke') ?? '';
+        if (el.closest('.cluster') && (stroke.includes('1.5873015873%') || stroke === 'transparent' || stroke === '')) {
+          el.setAttribute('stroke', isDark ? 'rgba(228, 228, 231, 0.7)' : 'rgba(63, 63, 70, 0.7)');
+        }
+      }
+    });
+
+    // Per-subgraph border colors, keyed by mermaid's cluster group id suffix (e.g. "...-Region").
+    const colors = preEl.dataset.clusterColors ? JSON.parse(preEl.dataset.clusterColors) : null;
+    if (colors) {
+      svg.querySelectorAll('g.cluster').forEach((cluster) => {
+        const name = Object.keys(colors).find((key) => cluster.id.endsWith(`-${key}`));
+        if (!name) return;
+        const { stroke, fill, dashed } = colors[name];
+        cluster.querySelectorAll('path, rect').forEach((shape) => {
+          shape.setAttribute('stroke', stroke);
+          if (fill) shape.setAttribute('fill', fill);
+          if (dashed) shape.setAttribute('stroke-dasharray', '8 6');
+        });
+      });
+    }
+
+    // Icon badges straddling each box's top-left corner, like AWS architecture diagrams.
+    const icons = preEl.dataset.nodeIcons ? JSON.parse(preEl.dataset.nodeIcons) : null;
+    if (icons) {
+      const viewBox = svg.viewBox.baseVal;
+      const svgRect = svg.getBoundingClientRect();
+      // getBBox() is in each element's own local (pre-transform) space, so it can't be used
+      // directly — convert the group's on-screen position back into the SVG's viewBox space instead.
+      const scaleX = viewBox.width / svgRect.width;
+      const scaleY = viewBox.height / svgRect.height;
+
+      const groups = Array.from(svg.querySelectorAll<SVGGElement>('g.node, g.rough-node, g.cluster'));
+      Object.entries(icons).forEach(([id, uris]) => {
+        // Regular nodes get an id like "...-flowchart-SUB1-0"; clusters get "...-Region" (no suffix).
+        const group = groups.find((g) => g.id.includes(`-${id}-`) || g.id.endsWith(`-${id}`));
+        if (!group) return;
+        const groupRect = group.getBoundingClientRect();
+        const x = viewBox.x + (groupRect.left - svgRect.left) * scaleX;
+        const y = viewBox.y + (groupRect.top - svgRect.top) * scaleY;
+        const size = 22;
+        (uris as string[]).forEach((uri, i) => {
+          const image = document.createElementNS(SVG_NS, 'image');
+          image.setAttribute('href', uri);
+          image.setAttribute('width', String(size));
+          image.setAttribute('height', String(size));
+          image.setAttribute('x', String(x - size / 2 + i * (size + 4)));
+          image.setAttribute('y', String(y - size / 2));
+          svg.appendChild(image);
+        });
+      });
+    }
+  });
+</script>
+

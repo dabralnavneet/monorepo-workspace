@@ -1,0 +1,66 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "VPC Peering"
+description: "A direct, private network connection between two VPCs, as if they shared the same network."
+domain: "Networking"
+order: 16
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVpcPeeringConnection } from "@aws-icons/react/resource";
+import { AmazonVirtualPrivateCloud } from "@aws-icons/react/architecture-service";
+
+export const peerIcon = awsIconDataUri(AmazonVpcPeeringConnection);
+export const vpcIcon = awsIconDataUri(AmazonVirtualPrivateCloud);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Two separate VPCs (different teams, accounts, or even a shared-services VPC) often need to talk to each other privately, without routing through the public internet or a VPN. **VPC Peering** solves this by creating a direct, private network connection between exactly two VPCs — traffic flows over AWS's internal network as if the two VPCs shared the same network, using private IP addresses.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A peering connection links exactly **two VPCs** — it can be **same-region**, **cross-region**, and even **cross-account**.
+- Peering is **not transitive**: if VPC A peers with VPC B, and B peers with C, A cannot reach C through B — you'd need a direct A↔C peering connection too.
+- Each VPC's route table must be updated to send traffic destined for the peer's CIDR through the peering connection.
+
+<Mermaid
+  chart={`graph LR
+  subgraph A["VPC A — 10.0.0.0/16"]
+    A1["App"]
+  end
+  subgraph B["VPC B — 10.1.0.0/16"]
+    B1["Shared Service"]
+  end
+  A <-->|"Peering Connection"| B
+  classDef vpcA fill:transparent,stroke:#8b3de0,stroke-width:3px
+  classDef vpcB fill:transparent,stroke:#3b82f6,stroke-width:3px`}
+  clusterColors={{ A: { stroke: "#8b3de0" }, B: { stroke: "#3b82f6" } }}
+  nodeIcons={{ A: [vpcIcon], B: [vpcIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Creating a peering connection is **free** — you only pay standard **data transfer** rates for traffic that crosses it (cross-AZ or cross-region rates apply when relevant).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Non-transitivity** is the single most tested fact about VPC Peering — a full mesh of _n_ VPCs needs _n(n-1)/2_ individual peering connections, which gets unwieldy fast (this is exactly the problem **Transit Gateway** solves).
+- Peered VPCs **cannot have overlapping CIDR blocks** — overlapping ranges make peering impossible.
+- Peering connections **do not support edge-to-edge routing** — a peered VPC cannot use the other VPC's Internet Gateway, NAT Gateway, VPN, or Direct Connect connection to reach beyond itself.
+- Security Groups can reference a security group **in the peered VPC** directly (in supported scenarios), simplifying cross-VPC access rules.

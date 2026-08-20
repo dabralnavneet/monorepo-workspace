@@ -3,7 +3,9 @@ import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav';
 import Hero from '../components/Hero';
 import Articles from '../components/Articles';
+import Guides from '../components/Guides';
 import Contact from '../components/Contact';
+import { getAwsSaaSidebar } from '../lib/aws-saa-curriculum';
 
 const startDate = new Date('2019-07-01');
 const now = new Date();
@@ -27,6 +29,16 @@ const articles = posts
     date: post.frontmatter.date,
     readTime: post.frontmatter.readTime ?? '5 min read',
   }));
+
+const { flatPublished } = getAwsSaaSidebar();
+const guideSeries = [
+  {
+    url: '/guides/aws-saa',
+    title: 'AWS Solutions Architect Associate',
+    description: 'A running study guide covering the exam domains, written while preparing for the certification.',
+    partCount: flatPublished.length,
+  },
+];
 ---
 
 <Layout title="Navneet Dabral — Senior Software Engineer">
@@ -34,6 +46,7 @@ const articles = posts
   <main>
     <Hero client:load years={years} />
     <Articles client:load articles={articles} />
+    <Guides client:load series={guideSeries} />
     <Contact client:load />
   </main>
 </Layout>

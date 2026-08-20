@@ -1,0 +1,59 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import GuideSidebar from '../../../components/GuideSidebar';
+import { getAwsSaaSidebar } from '../../../lib/aws-saa-curriculum';
+
+const { domains, flatPublished } = getAwsSaaSidebar();
+const totalTopics = domains.reduce((sum, d) => sum + d.topics.length, 0);
+const firstTopic = flatPublished[0] ?? null;
+
+// Jump straight into the series instead of showing an intermediate landing page.
+if (firstTopic?.url) {
+  return Astro.redirect(firstTopic.url);
+}
+---
+
+<Layout title="AWS Solutions Architect Associate Guide | Navneet Dabral">
+  <main class="w-full min-h-screen">
+    <GuideSidebar client:load domains={domains} />
+
+    <div class="lg:pl-56">
+      <div class="max-w-2xl mx-auto px-6 pt-10 pb-24 md:pb-32">
+        <a
+          href="/guides"
+          class="inline-flex items-center gap-2 text-zinc-600 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200 mb-14"
+        >
+          ← guides
+        </a>
+
+        <div class="flex items-center gap-6 mb-4">
+          <span class="text-zinc-800 dark:text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">AWS Solutions Architect Associate</span>
+          <div class="flex-1 h-px bg-zinc-200 dark:bg-zinc-900"></div>
+        </div>
+        <p class="text-zinc-500 dark:text-zinc-600 text-sm leading-relaxed mb-4">
+          A running study guide covering the exam domains, written while preparing for the certification. Browse by
+          domain in the contents panel — {flatPublished.length} of {totalTopics} topics published so far.
+        </p>
+
+        {firstTopic ? (
+          <a
+            href={firstTopic.url ?? '#'}
+            class="group inline-flex items-center gap-3 mt-8 text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors duration-200 py-7 border-t border-zinc-200 dark:border-zinc-900 w-full"
+          >
+            <span class="flex-1">
+              <span class="block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-600 mb-2">Start reading</span>
+              <span class="text-xl font-medium">{firstTopic.title}</span>
+            </span>
+            <span class="text-zinc-400 dark:text-zinc-700 text-sm group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-all duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </a>
+        ) : (
+          <p class="text-zinc-400 dark:text-zinc-700 font-mono text-sm py-8 border-t border-zinc-200 dark:border-zinc-900">
+            Nothing published yet. Check back soon.
+          </p>
+        )}
+      </div>
+    </div>
+  </main>
+</Layout>

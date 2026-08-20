@@ -1,0 +1,76 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Subnets"
+description: "Slicing a VPC's CIDR block into AZ-scoped ranges to place resources exactly where you want them."
+domain: "Networking"
+order: 4
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVpcInternetGateway } from "@aws-icons/react/resource";
+import {
+  PublicSubnet,
+  PrivateSubnet,
+} from "@aws-icons/react/architecture-group";
+
+export const igwIcon = awsIconDataUri(AmazonVpcInternetGateway);
+export const publicSubnetIcon = awsIconDataUri(PublicSubnet);
+export const privateSubnetIcon = awsIconDataUri(PrivateSubnet);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+A VPC's CIDR block is just one big address range — you still need a way to place resources into different **fault-isolation and access-tier boundaries**. Subnets solve this by carving the VPC CIDR into smaller ranges, each tied to a single Availability Zone. This lets you separate a public-facing tier (load balancers) from a private tier (app servers) from an isolated tier (databases), while also spreading resources across AZs for high availability.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A subnet is **AZ-specific** — it is created in exactly one Availability Zone and cannot span multiple AZs.
+- A subnet is classified as **public** if its route table sends `0.0.0.0/0` to an Internet Gateway, and **private** otherwise.
+- Multiple subnets from the same VPC can live in the same AZ, but a single subnet can never straddle two AZs.
+
+<Mermaid
+  chart={`graph LR
+  IGW["Internet Gateway"] --> PUB["Public Subnet (10.0.1.0/24)"]
+  PUB --> APP["Private Subnet (10.0.2.0/24)"]
+  APP --> DB["Isolated Subnet (10.0.3.0/24)"]
+  classDef igw fill:transparent,stroke:#e0842e,stroke-width:3px
+  classDef pub fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef priv fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef iso fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class IGW igw
+  class PUB pub
+  class APP priv
+  class DB iso`}
+  nodeIcons={{
+    IGW: [igwIcon],
+    PUB: [publicSubnetIcon],
+    APP: [privateSubnetIcon],
+    DB: [privateSubnetIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Subnets themselves are **free**. Cost only shows up indirectly — e.g., traffic leaving a private subnet through a NAT Gateway, or data transfer between subnets in different AZs (charged per GB in each direction).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- AWS **reserves 5 IP addresses** in every subnet (network address, VPC router, DNS, future use, and broadcast address) — a `/28` (16 IPs) only gives you 11 usable addresses.
+- Subnet size must be **within** the parent VPC's CIDR range, from `/16` down to `/28`.
+- "Public subnet" is a **route table property**, not a subnet attribute — moving the default route to a NAT Gateway instead of an IGW turns it private.
+- For high availability, always deploy across **at least 2 subnets in 2 different AZs** (this is a hard requirement for many services, e.g. RDS Multi-AZ, ALBs).

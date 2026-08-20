@@ -1,0 +1,61 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Global Accelerator"
+description: "Routing users onto AWS's private global network as early as possible, using static anycast IPs."
+domain: "Networking"
+order: 22
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsGlobalAccelerator } from "@aws-icons/react/architecture-service";
+import { ElasticLoadBalancingApplicationLoadBalancer } from "@aws-icons/react/resource";
+
+export const gaIcon = awsIconDataUri(AwsGlobalAccelerator);
+export const albIcon = awsIconDataUri(
+  ElasticLoadBalancingApplicationLoadBalancer,
+);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Even with CDN caching, traffic that has to hit an origin still traverses the unpredictable public internet for however many hops separate the user from the nearest AWS edge. **AWS Global Accelerator** solves this by giving you **static anycast IP addresses** that route user traffic onto **AWS's private global network backbone** at the nearest edge location, sending it the rest of the way over AWS's own fast, reliable network instead of the public internet.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Global Accelerator is a **global** service, exposing 2 **static anycast IPs** that never change, regardless of which regional endpoints are behind them.
+- It routes to endpoints (ALBs, NLBs, EC2 instances, Elastic IPs) across **multiple regions**, automatically directing users to the **closest healthy** one.
+- Unlike CloudFront (which caches content), Global Accelerator is purely about **network path optimization** — it doesn't cache anything.
+
+<Mermaid
+  chart={`graph LR
+  User(("User")) --> AGA["Global Accelerator (static anycast IP)"]
+  AGA -->|"AWS backbone"| ALB1["ALB — Region A"]
+  AGA -->|"AWS backbone"| ALB2["ALB — Region B"]`}
+  nodeIcons={{ AGA: [gaIcon], ALB1: [albIcon], ALB2: [albIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Global Accelerator bills a **fixed hourly fee** per accelerator plus a **data transfer premium** on top of standard rates — more expensive than plain data transfer, priced for the improved network path.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **CloudFront vs. Global Accelerator**: CloudFront caches HTTP(S) content at the edge (good for static/cacheable web content); Global Accelerator optimizes the network path for **any TCP/UDP traffic**, including non-HTTP protocols (gaming, IoT, VoIP) — a key exam distinguisher.
+- Global Accelerator's **static IPs never change**, even during failover between regions — useful when clients or firewalls whitelist specific IPs and DNS-based failover (like Route 53) isn't fast or reliable enough.
+- Automatic, **fast regional failover** without a DNS change or TTL wait is the headline resilience benefit tested on the exam.
+- It complements, rather than replaces, Route 53 and CloudFront — the three are often combined in the same architecture for different jobs (DNS routing, content caching, network acceleration).

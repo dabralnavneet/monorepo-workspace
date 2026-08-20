@@ -1,0 +1,63 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "NAT Gateways"
+description: "Letting private subnets reach the internet outbound-only, without ever being reachable from it."
+domain: "Networking"
+order: 7
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AmazonVpcNatGateway,
+  AmazonVpcInternetGateway,
+} from "@aws-icons/react/resource";
+
+export const natIcon = awsIconDataUri(AmazonVpcNatGateway);
+export const igwIcon = awsIconDataUri(AmazonVpcInternetGateway);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Instances in a private subnet (app servers, workers) often still need to reach the internet — to pull OS updates or call a third-party API — without ever being directly reachable from it. A **NAT Gateway** solves this: it sits in a **public** subnet, and private-subnet instances route their outbound internet traffic through it. Responses come back through the same NAT Gateway, but nothing on the internet can initiate a connection _into_ the private instances.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A NAT Gateway is deployed **into a specific subnet**, which pins it to that subnet's **single AZ** — it is not automatically redundant across AZs.
+- For high availability, best practice is **one NAT Gateway per AZ**, each used by that AZ's private subnets — this also avoids inter-AZ data transfer charges.
+- It requires an **Elastic IP** and must live in a **public** subnet (one with a route to an Internet Gateway).
+
+<Mermaid
+  chart={`graph LR
+  PRIV["Private Subnet"] --> NAT["NAT Gateway (in public subnet)"]
+  NAT --> IGW["Internet Gateway"]
+  IGW --> Internet(("Internet"))
+  classDef priv fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class PRIV priv`}
+  nodeIcons={{ NAT: [natIcon], IGW: [igwIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Unlike an Internet Gateway, a NAT Gateway is **not free** — it bills an **hourly charge per gateway** plus a **per-GB data processing charge** for everything that passes through it. This is one of the most commonly under-estimated line items in a real AWS bill, and a frequent exam cost-optimization scenario (e.g. "one NAT Gateway shared across AZs" vs. "NAT instance" trade-offs).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- NAT Gateways are **AWS-managed, highly available within their AZ**, and scale automatically — unlike the older, self-managed **NAT instance** option (an EC2 instance running NAT software), which you must patch, scale, and secure yourself.
+- A NAT Gateway supports **outbound-only** initiated connections — it cannot be used to allow inbound connections from the internet, unlike port-forwarding setups you might build with a NAT instance.
+- To survive an AZ failure, deploy **one NAT Gateway per AZ** rather than one shared gateway — the exam often frames this as a resilience/cost trade-off question.
+- A NAT Gateway needs an **Elastic IP** at creation time and cannot be assigned a security group directly (traffic control happens via NACLs and the security groups of the instances using it).

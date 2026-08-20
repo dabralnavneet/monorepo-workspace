@@ -1,25 +1,64 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 html {
-  background: #000;
-  color: #fafafa;
+  background: #fafafa;
+  color: #18181b;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
+html.dark {
   background: #000;
+  color: #fafafa;
+}
+
+body {
+  background: #fafafa;
   overflow-x: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+html.dark body {
+  background: #000;
+}
+
 ::selection {
+  background: #18181b;
+  color: #fafafa;
+}
+
+html.dark ::selection {
   background: #fafafa;
   color: #000;
 }
 
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #000; }
-::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #333; }
+::-webkit-scrollbar-track { background: #fafafa; }
+::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+html.dark ::-webkit-scrollbar-track { background: #000; }
+html.dark ::-webkit-scrollbar-thumb { background: #222; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+/* Radix Accordion open/close height transition, per Radix's documented recipe */
+.accordion-content {
+  overflow: hidden;
+}
+.accordion-content[data-state='open'] {
+  animation: accordion-down 200ms ease-out;
+}
+.accordion-content[data-state='closed'] {
+  animation: accordion-up 200ms ease-out;
+}
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}

@@ -1,0 +1,74 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "PrivateLink"
+description: "Exposing a service to other VPCs privately, without peering, VPNs, or ever touching the public internet."
+domain: "Networking"
+order: 19
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsPrivateLink } from "@aws-icons/react/architecture-service";
+import { AmazonVpcEndpoints } from "@aws-icons/react/resource";
+import { ElasticLoadBalancingNetworkLoadBalancer } from "@aws-icons/react/resource";
+
+export const plIcon = awsIconDataUri(AwsPrivateLink);
+export const epIcon = awsIconDataUri(AmazonVpcEndpoints);
+export const nlbIcon = awsIconDataUri(ElasticLoadBalancingNetworkLoadBalancer);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+VPC Peering exposes an **entire** network to the other side — sometimes you only want to expose _one specific service_ (e.g. a SaaS API) to consumers, without giving them any broader network access, and without the CIDR-overlap and route-table headaches of peering. **AWS PrivateLink** solves this: a service provider exposes an application behind a Network Load Balancer, and consumers reach it through a private **VPC Interface Endpoint** — an ENI with a private IP directly inside their own VPC.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Interface Endpoints are **AZ-specific** ENIs — you typically create one per AZ you want to serve for high availability.
+- PrivateLink connections are **one-way**: the consumer VPC can reach the service, but the service provider cannot initiate connections back into the consumer's VPC — a key security property.
+- No CIDR planning, route tables, or peering acceptance needed — the consumer just resolves a DNS name that points at their local endpoint ENI.
+
+<Mermaid
+  chart={`graph LR
+  subgraph Consumer["Consumer VPC"]
+    EP["Interface Endpoint (ENI)"]
+    APP["Consumer App"]
+  end
+  subgraph Provider["Service Provider VPC"]
+    NLB["Network Load Balancer"]
+    SVC["Service"]
+  end
+  APP --> EP
+  EP -->|"PrivateLink"| NLB
+  NLB --> SVC
+  classDef consumer fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70`}
+  clusterColors={{
+    Consumer: { stroke: "#3b82f6" },
+    Provider: { stroke: "#8b3de0" },
+  }}
+  nodeIcons={{ EP: [epIcon], NLB: [nlbIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Interface Endpoints bill an **hourly charge per AZ** plus a **per-GB data processing charge** — similar pricing shape to NAT Gateways and Transit Gateway attachments.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- PrivateLink is the standard mechanism behind most **VPC Interface Endpoints** for AWS services (e.g. reaching an API privately) — but note **S3 and DynamoDB use Gateway Endpoints instead** (a route-table target, not an ENI, and free).
+- The exam loves the phrase **"without exposing your VPC to the internet or peering"** as the signal to reach for PrivateLink over VPC Peering or a public NLB.
+- Because it's one-directional, PrivateLink is ideal for **multi-tenant SaaS** architectures — many customer VPCs can each get a private endpoint to one shared provider service without any customer reaching another.
+- No overlapping CIDR restrictions apply, since there's no full network peering happening — just a targeted, private service connection.

@@ -1,0 +1,66 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "VPC Peering Demo"
+description: "Walking through a concrete two-VPC peering setup: CIDRs, route tables, and the security group rule that ties it together."
+domain: "Networking"
+order: 17
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonVpcPeeringConnection } from "@aws-icons/react/resource";
+import { AmazonEc2 } from "@aws-icons/react/architecture-service";
+
+export const peerIcon = awsIconDataUri(AmazonVpcPeeringConnection);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Knowing the theory of VPC Peering is one thing — actually wiring it up involves three concrete steps that are easy to forget in practice: requesting/accepting the peering connection, updating **both** VPCs' route tables, and updating security groups to actually allow the traffic. This walkthrough ties those steps to a real example: `VPC-A (10.0.0.0/16)` peered with `VPC-B (10.1.0.0/16)`.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Step 1 — **Request & accept**: the owner of VPC-A requests a peering connection to VPC-B; the owner of VPC-B (same or different account) must accept it before traffic can flow.
+- Step 2 — **Route tables**: in VPC-A's route table, add `10.1.0.0/16 → pcx-xxxx`; in VPC-B's route table, add `10.0.0.0/16 → pcx-xxxx`. Miss either direction and traffic is one-way or fails entirely.
+- Step 3 — **Security groups**: the receiving instance's security group must explicitly allow inbound traffic from the peer's CIDR (or its security group ID, if referencing across the peering connection).
+
+<Mermaid
+  chart={`graph LR
+  subgraph A["VPC-A — 10.0.0.0/16"]
+    EC2A["EC2: 10.0.1.10"]
+  end
+  subgraph B["VPC-B — 10.1.0.0/16"]
+    EC2B["EC2: 10.1.1.20"]
+  end
+  A <-->|"pcx-xxxx"| B
+  EC2A -->|"route: 10.1.0.0/16 to pcx-xxxx"| EC2B
+  classDef ec2 fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20`}
+  clusterColors={{ A: { stroke: "#8b3de0" }, B: { stroke: "#3b82f6" } }}
+  nodeIcons={{ EC2A: [ec2Icon], EC2B: [ec2Icon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Same as plain peering: the connection itself is **free**, and you're billed only for the **data transfer** that actually crosses it once traffic starts flowing.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- The **most common misconfiguration** tested is a one-directional route table update — traffic from A reaches B, but B's replies have nowhere to go back to A.
+- Peering connections have states: `pending-acceptance`, `active`, `rejected`, `expired` (unaccepted requests expire after 7 days) — know that an unaccepted request doesn't route any traffic.
+- DNS resolution across a peering connection (resolving the peer VPC's private hostnames) must be **explicitly enabled** on the peering connection — it's off by default.
+- Remember the CIDR overlap rule from the previous topic: if `10.0.0.0/16` and `10.1.0.0/16` had overlapped instead, this entire peering setup would be rejected at creation.

@@ -1,0 +1,70 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Security Groups"
+description: "The stateful, instance-level firewall that follows your resources wherever they go inside a VPC."
+domain: "Networking"
+order: 11
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2, AmazonRds } from "@aws-icons/react/architecture-service";
+import { Firewall } from "@aws-icons/react/resource";
+
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const rdsIcon = awsIconDataUri(AmazonRds);
+export const firewallIcon = awsIconDataUri(Firewall);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Subnet-level routing decides _whether traffic can reach_ a network segment — it says nothing about which specific instance or port should accept it. A **Security Group** solves this by acting as a virtual firewall attached directly to an ENI (elastic network interface), controlling exactly which inbound/outbound traffic that specific resource (EC2, RDS, Lambda-in-VPC, etc.) is allowed to send or receive.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A security group is created **inside a specific VPC** — it cannot be attached to resources in a different VPC.
+- It operates at the **ENI level**, not the subnet or AZ level — if an instance moves AZs (e.g., stopped and started), its attached security groups move with it.
+- Rules can reference **other security groups as the source/destination** instead of a CIDR block — useful for allowing "anything in the app-tier SG" to talk to "anything in the db-tier SG" without hardcoding IPs.
+
+<Mermaid
+  chart={`graph TD
+  Internet(("Internet")) -->|"443 allowed"| SG_WEB["SG: web-tier"]
+  SG_WEB -->|"3306 allowed from SG: web-tier only"| SG_DB["SG: db-tier"]
+  SG_DB -.->|"all other inbound denied by default"| X["blocked"]
+  classDef web fill:#f3ecfb,stroke:#8b3de0,stroke-width:3px,color:#3a1a5c
+  classDef db fill:#fdf0e6,stroke:#e0842e,stroke-width:3px,color:#6b3b0f
+  classDef blocked fill:#fde8e8,stroke:#dc2626,stroke-width:2px,color:#7f1d1d
+  class SG_WEB web
+  class SG_DB db
+  class X blocked`}
+  nodeIcons={{
+    SG_WEB: [firewallIcon, ec2Icon],
+    SG_DB: [firewallIcon, rdsIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Security groups are **free**. There is no charge for creating them, attaching them, or the number of rules within AWS default quotas.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Security groups are **stateful**: if inbound traffic is allowed, the response traffic is automatically allowed out, regardless of outbound rules.
+- They only support **"allow" rules** — there is no explicit "deny" (unlike NACLs). To block traffic, simply don't allow it.
+- **All rules are evaluated together** (there's no rule ordering/priority) — the most permissive matching rule wins.
+- Default behavior: a new security group **denies all inbound** and **allows all outbound**.
+- An instance can have **up to 5 security groups** attached (default quota, can be increased), and rules from all of them are combined.

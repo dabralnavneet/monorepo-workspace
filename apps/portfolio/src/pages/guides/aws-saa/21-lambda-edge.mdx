@@ -1,0 +1,64 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Lambda@Edge"
+description: "Running your own code at CloudFront edge locations, right in the request/response path."
+domain: "Networking"
+order: 21
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AwsLambda,
+  AmazonCloudFront,
+} from "@aws-icons/react/architecture-service";
+
+export const lambdaIcon = awsIconDataUri(AwsLambda);
+export const cfIcon = awsIconDataUri(AmazonCloudFront);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+CloudFront alone can cache and route requests, but sometimes you need to actually **run logic** close to the user — rewriting a URL, checking a header for A/B testing, or generating a custom response — without round-tripping all the way back to a distant origin. **Lambda@Edge** solves this by letting you run Lambda functions **at CloudFront edge locations**, hooked into four specific points in the request lifecycle.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Lambda@Edge functions are **authored in one region (`us-east-1` only)** but automatically **replicated globally** to run at whichever edge location handles the request.
+- Functions can be attached to any of **four CloudFront trigger points**: viewer request, origin request, origin response, viewer response.
+- Compared to regular Lambda, Lambda@Edge has **stricter limits** (smaller memory/timeout ceilings, especially for viewer-triggered functions) since it must run with minimal added latency at the edge.
+
+<Mermaid
+  chart={`graph LR
+  User(("User")) -->|"1: Viewer Request"| Edge["Edge Location"]
+  Edge -->|"2: Origin Request"| Origin["Origin"]
+  Origin -->|"3: Origin Response"| Edge
+  Edge -->|"4: Viewer Response"| User
+  classDef fn fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class Edge fn`}
+  nodeIcons={{ Edge: [lambdaIcon, cfIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Lambda@Edge bills per **request** and per **compute duration** (GB-seconds), similar to standard Lambda, but at a **higher per-unit rate** to reflect running across the entire global edge network rather than one region.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Know the **four trigger points** and their typical use: viewer-request (auth/redirects before cache lookup), origin-request (modify request before hitting origin, e.g. origin selection), origin-response (transform origin's response before caching), viewer-response (add headers before returning to user).
+- **CloudFront Functions** (a separate, lighter-weight feature) is the newer alternative for simple, sub-millisecond JavaScript logic (header manipulation, URL rewrites) — the exam distinguishes it from Lambda@Edge by cost and capability: CloudFront Functions is cheaper and faster but far more limited (no network access, tiny code size, JS only).
+- Lambda@Edge functions **must be created in `us-east-1`**, even though they execute globally — a frequently tested detail.
+- Deleting or updating a Lambda@Edge function replicated across edge locations takes time to propagate globally — not instantaneous like a normal Lambda update.

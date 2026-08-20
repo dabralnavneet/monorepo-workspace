@@ -1,0 +1,62 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Direct Connect"
+description: "A dedicated, private physical network link between your data center and AWS — bypassing the public internet entirely."
+domain: "Networking"
+order: 15
+date: "Aug 20, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsDirectConnect } from "@aws-icons/react/architecture-service";
+import { AwsDirectConnectGateway } from "@aws-icons/react/resource";
+
+export const dxIcon = awsIconDataUri(AwsDirectConnect);
+export const dxgwIcon = awsIconDataUri(AwsDirectConnectGateway);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+VPN connections ride over the unpredictable public internet — fine for many workloads, but not for consistent low-latency, high-throughput, or highly sensitive traffic. **AWS Direct Connect** solves this by establishing a **dedicated physical network connection** from your data center (or a colocation facility) directly into AWS, entirely bypassing the public internet, with **consistent bandwidth and lower, more predictable latency**.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A Direct Connect connection terminates at a specific **AWS Direct Connect location** and is tied to that location/region pair.
+- A **Direct Connect Gateway** lets a single connection reach VPCs across **multiple regions** (except China), decoupling the physical link from any one region.
+- Connections come in two flavors: **dedicated** (a physical fiber cross-connect, 1/10/100 Gbps) and **hosted** (provisioned via an AWS Direct Connect Partner, smaller increments).
+
+<Mermaid
+  chart={`graph LR
+  DC["Your Data Center"] --> DX["Direct Connect (private link)"]
+  DX --> DXGW["Direct Connect Gateway"]
+  DXGW --> VPC1["VPC — Region A"]
+  DXGW --> VPC2["VPC — Region B"]
+  classDef vpc fill:transparent,stroke:#8b3de0,stroke-width:2px
+  class VPC1,VPC2 vpc`}
+  nodeIcons={{ DX: [dxIcon], DXGW: [dxgwIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Direct Connect bills **port-hour charges** for the connection itself plus **data transfer out** — but at meaningfully **lower per-GB rates than internet-based transfer**, which is exactly why high-volume, steady-state workloads (large data migrations, hybrid architectures) favor it once the up-front setup is done.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Setting up Direct Connect typically takes **weeks to a month** (physical cross-connects) — the exam frequently pairs this with **Site-to-Site VPN as a fast, temporary failover** while Direct Connect is being provisioned.
+- Direct Connect traffic is **not encrypted by default** — if you need encryption over it, layer a **VPN over Direct Connect** (a specific supported combination) on top.
+- **Direct Connect Gateway** is the key to a multi-region hybrid design from a single physical connection — know that plain Direct Connect alone is single-region.
+- For resilience, AWS recommends **at least two connections** at two different Direct Connect locations to avoid a single point of failure.

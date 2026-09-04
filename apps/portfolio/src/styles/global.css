@@ -66,15 +66,25 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #333; }
 }
 
 /* --- Hero theming -------------------------------------------------------------
-   The hero forces its own palette (it's an art panel), so its colours live here
-   as tokens rather than as dark: utilities the component's inline styles can't
-   reach. Flipping .dark on <html> re-resolves them instantly. */
+   The hero is a fixed light art panel — it keeps this pastel palette in both
+   themes (dimming the video + panda for dark mode just turns them to mud). The
+   wavy divider, filled with the page background, carries the light->dark seam.
+   Tokens live here because the component's inline styles can't use dark:. */
 :root {
   --hero-bg: #eaf4fc;
   --hero-ink: #2a2622;
   --hero-ink-soft: rgba(42, 38, 34, 0.82);
   --hero-grain-opacity: 0.06;
   --hero-grain-blend: overlay;
+  /* Left-weighted wash over the background video so the (left-aligned) text
+     keeps contrast; the video itself is nudged for the current theme. */
+  --hero-scrim: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.14) 52%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  --hero-video-filter: saturate(1.05);
   --hero-blobs:
     radial-gradient(60% 55% at 16% 82%, #eaf4fc 0%, rgba(234, 244, 252, 0) 72%),
     radial-gradient(72% 93% at 78% 26%, #b28fce 0%, rgba(178, 143, 206, 0) 60%),
@@ -83,22 +93,16 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #333; }
     #eaf4fc;
 }
 
-:root.dark {
-  --hero-bg: #000;
-  --hero-ink: #f3f1ee;
-  --hero-ink-soft: rgba(243, 241, 238, 0.68);
-  --hero-grain-opacity: 0.14;
-  --hero-grain-blend: soft-light;
-  --hero-blobs:
-    radial-gradient(70% 85% at 80% 24%, rgba(126, 77, 173, 0.42) 0%, rgba(126, 77, 173, 0) 62%),
-    radial-gradient(78% 66% at 92% 86%, rgba(178, 72, 110, 0.3) 0%, rgba(178, 72, 110, 0) 64%),
-    radial-gradient(58% 54% at 18% 16%, rgba(52, 116, 166, 0.34) 0%, rgba(52, 116, 166, 0) 62%),
-    #000;
-}
-
 .hero-section { background-color: var(--hero-bg); }
 .hero-blobs { background: var(--hero-blobs); }
+.hero-video { filter: var(--hero-video-filter); }
+.hero-scrim { background: var(--hero-scrim); }
 .hero-grain {
   opacity: var(--hero-grain-opacity);
   mix-blend-mode: var(--hero-grain-blend);
+}
+
+/* Honour reduced-motion: drop the video, fall back to the static gradient. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-video { display: none; }
 }

@@ -1,6 +1,10 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
+
+/** Background video playback speed — the clip drifts too fast at 1x. */
+const VIDEO_RATE = 0.5;
 
 /**
  * Hero — a responsive re-creation of the `gradient-bg.svg` art piece.
@@ -11,12 +15,15 @@ import { motion } from 'motion/react';
  * "Navneet Dabral" in Instrument Serif, and the "there is no secret ingredient"
  * quote.
  *
- * Structure: the tinted field + grain stay as fixed background layers; the
- * panda and the text are laid out as two real grid columns on top — stacked
- * (text, then panda) below `lg`, side-by-side from `lg`. Type is set with
- * inline styles so it never depends on a utility class a stale JIT pass might
- * miss. Colours are `--hero-*` custom properties (see global.css) so the panel
- * has its own light/dark palette. The `years` prop is kept for API compatibility.
+ * Structure (back to front): a fallback gradient, the "iridescent cloud" loop
+ * video (`object-cover`), a theme-aware contrast scrim, and film grain — then
+ * the panda + text as two real grid columns, stacked (text, then panda) below
+ * `lg` and side-by-side from `lg`. Type is set with inline styles so it never
+ * depends on a utility class a stale JIT pass might miss. Colours / scrim / the
+ * video filter are `--hero-*` custom properties (see global.css); the panel is a
+ * fixed light art panel in both themes, and the wavy bottom edge — filled with
+ * the page background — carries the seam into a dark page. The `years` prop is
+ * kept for API compatibility.
  */
 
 const INK = 'var(--hero-ink)';
@@ -33,14 +40,51 @@ const fadeUp = {
 };
 
 export default function Hero({ years: _years }: Readonly<{ years: number }>) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    // playbackRate is reset whenever the media element (re)loads its source.
+    const apply = () => {
+      v.playbackRate = VIDEO_RATE;
+    };
+    apply();
+    v.addEventListener('loadeddata', apply);
+    return () => v.removeEventListener('loadeddata', apply);
+  }, []);
+
   return (
     <section className="hero-section relative isolate flex w-full flex-col justify-center overflow-hidden lg:min-h-screen">
-      {/* Blobs — four radial gradients (positioned by the source SVG's ellipse
-          centres); the gradient stack itself is `--hero-blobs` in global.css so
-          it can switch to a dark palette. */}
+      {/* Fallback gradient — shows before/behind the video, on slow connections,
+          and when `prefers-reduced-motion` hides the video. `--hero-blobs` in
+          global.css also carries the dark palette. */}
       <div
         aria-hidden
-        className="hero-blobs pointer-events-none absolute inset-0 -z-20"
+        className="hero-blobs pointer-events-none absolute inset-0 -z-40"
+      />
+
+      {/* Iridescent cloud background video */}
+      <video
+        ref={videoRef}
+        aria-hidden
+        tabIndex={-1}
+        className="hero-video pointer-events-none absolute inset-0 -z-30 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/images/iridescent-poster.jpg"
+      >
+        <source src="/videos/iridescent-cloud.webm" type="video/webm" />
+        <source src="/videos/iridescent-cloud.mp4" type="video/mp4" />
+      </video>
+
+      {/* Contrast scrim — left-weighted, theme-aware (see --hero-scrim). */}
+      <div
+        aria-hidden
+        className="hero-scrim pointer-events-none absolute inset-0 -z-20"
       />
 
       {/* Film grain */}
@@ -144,6 +188,20 @@ export default function Hero({ years: _years }: Readonly<{ years: number }>) {
           </motion.p>
         </div>
       </div>
+
+      {/* Wavy edge into the writing section — filled with the page background
+          so it reads as the next section cutting a curved line into the hero. */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-12 w-full sm:h-16 lg:h-20"
+        viewBox="0 0 1440 80"
+        preserveAspectRatio="none"
+      >
+        <path
+          className="fill-[#fafafa] dark:fill-black"
+          d="M0,34 C 240,80 420,4 720,26 C 1000,46 1200,86 1440,38 L1440,80 L0,80 Z"
+        />
+      </svg>
     </section>
   );
 }

@@ -22,23 +22,30 @@ const { chart, clusterColors, nodeIcons } = Astro.props;
 <script>
   import mermaid from 'mermaid';
 
-  const isDark = document.documentElement.classList.contains('dark');
-  // 'handDrawn' uses rough.js under the hood for an Excalidraw-style sketchy look.
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: isDark ? 'dark' : 'default',
-    look: 'handDrawn',
-    // Transparent cluster fill avoids a heavy hachure background clashing with the page.
-    themeVariables: { clusterBkg: 'transparent', clusterBorder: 'transparent', fontSize: '17px' },
-    flowchart: { padding: 24, nodeSpacing: 45, rankSpacing: 55 },
-  });
-
-  const preEls = Array.from(document.querySelectorAll<HTMLElement>('.mermaid'));
-  await mermaid.run({ querySelector: '.mermaid' });
-
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  preEls.forEach((preEl) => {
+  async function renderMermaidDiagrams() {
+    // Only touch diagrams that haven't been rendered yet — `astro:page-load`
+    // fires again after every view-transition navigation.
+    const preEls = Array.from(
+      document.querySelectorAll<HTMLElement>('.mermaid:not([data-processed])'),
+    );
+    if (preEls.length === 0) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    // 'handDrawn' uses rough.js under the hood for an Excalidraw-style sketchy look.
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? 'dark' : 'default',
+      look: 'handDrawn',
+      // Transparent cluster fill avoids a heavy hachure background clashing with the page.
+      themeVariables: { clusterBkg: 'transparent', clusterBorder: 'transparent', fontSize: '17px' },
+      flowchart: { padding: 24, nodeSpacing: 45, rankSpacing: 55 },
+    });
+
+    await mermaid.run({ nodes: preEls });
+
+    preEls.forEach((preEl) => {
     const svg = preEl.querySelector('svg');
     if (!svg) return;
 
@@ -99,6 +106,9 @@ const { chart, clusterColors, nodeIcons } = Astro.props;
         });
       });
     }
-  });
+    });
+  }
+
+  document.addEventListener('astro:page-load', renderMermaidDiagrams);
 </script>
 

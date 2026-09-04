@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as Accordion from '@radix-ui/react-accordion';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -33,20 +33,68 @@ const domainIcons: Record<string, typeof IconNetwork> = {
   Security: IconShieldLock,
 };
 
+const stripSlash = (p: string) => (p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p);
+
+/**
+ * The active topic's `order`, derived from the current URL rather than a prop.
+ * This island is kept mounted across Astro view-transition navigations
+ * (`transition:persist`), so it can't rely on props changing — instead it
+ * re-reads `location.pathname` on every `astro:page-load`.
+ */
+function useActiveOrder(domains: SidebarDomain[], fallback?: number) {
+  const resolve = () => {
+    if (typeof window === 'undefined') return fallback;
+    const path = stripSlash(window.location.pathname);
+    for (const d of domains) {
+      for (const t of d.topics) {
+        if (t.url && stripSlash(t.url) === path) return t.order;
+      }
+    }
+    return fallback;
+  };
+
+  const [order, setOrder] = useState<number | undefined>(resolve);
+
+  useEffect(() => {
+    const sync = () => setOrder(resolve());
+    sync();
+    document.addEventListener('astro:page-load', sync);
+    return () => document.removeEventListener('astro:page-load', sync);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domains]);
+
+  return order;
+}
+
 function SidebarContents({
   domains,
   currentOrder,
   onNavigate,
-}: {
+}: Readonly<{
   domains: SidebarDomain[];
   currentOrder?: number;
   onNavigate?: () => void;
-}) {
-  const defaultValue =
-    (domains.find((d) => d.topics.some((t) => t.order === currentOrder)) ?? domains[0])?.domain;
+}>) {
+  const activeDomain = useMemo(
+    () => (domains.find((d) => d.topics.some((t) => t.order === currentOrder)) ?? domains[0])?.domain ?? '',
+    [domains, currentOrder],
+  );
+
+  // Controlled so the open section follows the active topic across navigations,
+  // while still letting the reader collapse/expand sections by hand.
+  const [open, setOpen] = useState<string>(activeDomain);
+  useEffect(() => {
+    if (activeDomain) setOpen(activeDomain);
+  }, [activeDomain]);
 
   return (
-    <Accordion.Root type="single" collapsible defaultValue={defaultValue} className="flex flex-col gap-1">
+    <Accordion.Root
+      type="single"
+      collapsible
+      value={open}
+      onValueChange={setOpen}
+      className="flex flex-col gap-1"
+    >
       {domains.map((d) => {
         const Icon = domainIcons[d.domain] ?? IconFolder;
 
@@ -84,6 +132,7 @@ function SidebarContents({
                       key={t.order}
                       href={t.url ?? '#'}
                       onClick={onNavigate}
+                      aria-current={isActive ? 'page' : undefined}
                       className={`text-sm py-1.5 transition-colors duration-200 ${
                         isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
                       }`}
@@ -104,11 +153,19 @@ function SidebarContents({
 export default function GuideSidebar({
   domains,
   currentOrder,
-}: {
+}: Readonly<{
   domains: SidebarDomain[];
   currentOrder?: number;
-}) {
+}>) {
+  const activeOrder = useActiveOrder(domains, currentOrder);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close the mobile drawer once a client-side navigation has completed.
+  useEffect(() => {
+    const close = () => setDrawerOpen(false);
+    document.addEventListener('astro:page-load', close);
+    return () => document.removeEventListener('astro:page-load', close);
+  }, []);
 
   return (
     <>
@@ -123,8 +180,8 @@ export default function GuideSidebar({
       </button>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-56 shrink-0 fixed left-0 top-0 h-screen overflow-y-auto pt-10 pb-12 pl-6 pr-4 border-r border-zinc-200 dark:border-zinc-900">
-        <SidebarContents domains={domains} currentOrder={currentOrder} />
+      <aside className="hidden lg:block w-56 shrink-0 fixed left-0 top-0 h-screen overflow-y-auto pt-24 pb-12 pl-6 pr-4 border-r border-zinc-200 dark:border-zinc-900">
+        <SidebarContents domains={domains} currentOrder={activeOrder} />
       </aside>
 
       {/* Mobile drawer */}
@@ -155,7 +212,7 @@ export default function GuideSidebar({
                       Close
                     </button>
                   </Dialog.Close>
-                  <SidebarContents domains={domains} currentOrder={currentOrder} onNavigate={() => setDrawerOpen(false)} />
+                  <SidebarContents domains={domains} currentOrder={activeOrder} onNavigate={() => setDrawerOpen(false)} />
                 </motion.div>
               </Dialog.Content>
             </Dialog.Portal>

@@ -9,7 +9,7 @@ interface GuideSeries {
   partCount: number;
 }
 
-export default function Guides({ series }: { series: GuideSeries[] }) {
+export default function Guides({ series }: Readonly<{ series: GuideSeries[] }>) {
   return (
     <section
       id="guides"

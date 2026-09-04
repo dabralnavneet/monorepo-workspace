@@ -13,12 +13,11 @@ const nextPart = currentIndex >= 0 && currentIndex < flatPublished.length - 1 ? 
 const TopicIcon = awsTopicIcons[frontmatter.order];
 ---
 
-<Layout title={`${frontmatter.title} | Navneet Dabral`}>
+<Layout title={`${frontmatter.title} | Navneet Dabral`} sidebar>
   <main class="w-full min-h-screen">
-    <GuideSidebar client:load domains={domains} currentOrder={frontmatter.order} />
+    <GuideSidebar client:load transition:persist="guide-sidebar" domains={domains} currentOrder={frontmatter.order} />
 
-    <div class="lg:pl-56">
-      <div class="max-w-2xl mx-auto px-6 pt-10 pb-24 md:pb-32">
+    <div class="max-w-2xl mx-auto px-6 pt-28 pb-24 md:pb-32">
         <div class="flex items-center gap-2 text-zinc-600 font-mono text-xs uppercase tracking-[0.2em] mb-14">
           <a href="/guides" class="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200">guides</a>
           <span>/</span>
@@ -70,7 +69,6 @@ const TopicIcon = awsTopicIcons[frontmatter.order];
           ) : <span />}
         </div>
       </div>
-    </div>
   </main>
 </Layout>
 

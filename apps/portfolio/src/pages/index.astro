@@ -1,10 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Nav from '../components/Nav';
 import Hero from '../components/Hero';
 import Articles from '../components/Articles';
 import Guides from '../components/Guides';
-import Contact from '../components/Contact';
 import { getAwsSaaSidebar } from '../lib/aws-saa-curriculum';
 
 const startDate = new Date('2019-07-01');
@@ -42,11 +40,9 @@ const guideSeries = [
 ---
 
 <Layout title="Navneet Dabral — Senior Software Engineer">
-  <Nav client:load />
   <main>
     <Hero client:load years={years} />
     <Articles client:load articles={articles} />
     <Guides client:load series={guideSeries} />
-    <Contact client:load />
   </main>
 </Layout>

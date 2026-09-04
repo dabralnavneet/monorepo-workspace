@@ -1,8 +1,14 @@
 ---
+import { ClientRouter } from 'astro:transitions';
+import Nav from '../components/Nav';
+import Contact from '../components/Contact';
+
 interface Props {
   title: string;
+  /** Indent the page + footer past the fixed guide sidebar (lg and up). */
+  sidebar?: boolean;
 }
-const { title } = Astro.props;
+const { title, sidebar = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -15,20 +21,34 @@ const { title } = Astro.props;
     <link rel="icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <ClientRouter />
     <title>{title}</title>
     <script is:inline>
-      // Applied before paint to avoid a flash of the wrong theme.
+      // Applied before paint to avoid a flash of the wrong theme, and re-applied
+      // after each view-transition navigation (the <html> element persists, so
+      // the class usually survives — this is belt-and-suspenders).
       (function () {
-        var stored = localStorage.getItem('theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var isDark = stored ? stored === 'dark' : prefersDark;
-        document.documentElement.classList.toggle('dark', isDark);
+        function applyTheme() {
+          var stored = localStorage.getItem('theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored ? stored === 'dark' : prefersDark;
+          document.documentElement.classList.toggle('dark', isDark);
+        }
+        applyTheme();
+        if (!window.__themeSwapBound) {
+          window.__themeSwapBound = true;
+          document.addEventListener('astro:after-swap', applyTheme);
+        }
       })();
     </script>
   </head>
   <body>
-    <slot />
+    <Nav client:load transition:persist="site-nav" />
+    <div class:list={[sidebar && 'lg:pl-56']}>
+      <slot />
+      <Contact client:load />
+    </div>
   </body>
 </html>
 

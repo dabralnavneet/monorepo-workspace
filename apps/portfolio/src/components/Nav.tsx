@@ -35,29 +35,23 @@ export default function Nav() {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-20 py-5 flex items-center justify-between bg-gradient-to-b from-[#fafafa] dark:from-[#000] to-transparent"
+      className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-20 py-5 flex items-center justify-end bg-gradient-to-b from-[#fafafa] dark:from-[#000] to-transparent"
     >
-      <a
-        href="/"
-        className="text-zinc-900 dark:text-zinc-100 font-mono text-sm tracking-tight hover:text-black dark:hover:text-white transition-colors duration-200"
-      >
-        navneet dabral
-      </a>
       <nav className="flex items-center gap-8">
         <a
-          href="#writing"
+          href="/#writing"
           className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
         >
           writing
         </a>
         <a
-          href="/guides/aws-saa"
+          href="/#guides"
           className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
         >
           guides
         </a>
         <a
-          href="#contact"
+          href="/#contact"
           className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
         >
           contact

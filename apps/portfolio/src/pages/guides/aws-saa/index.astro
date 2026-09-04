@@ -6,19 +6,13 @@ import { getAwsSaaSidebar } from '../../../lib/aws-saa-curriculum';
 const { domains, flatPublished } = getAwsSaaSidebar();
 const totalTopics = domains.reduce((sum, d) => sum + d.topics.length, 0);
 const firstTopic = flatPublished[0] ?? null;
-
-// Jump straight into the series instead of showing an intermediate landing page.
-if (firstTopic?.url) {
-  return Astro.redirect(firstTopic.url);
-}
 ---
 
-<Layout title="AWS Solutions Architect Associate Guide | Navneet Dabral">
+<Layout title="AWS Solutions Architect Associate Guide | Navneet Dabral" sidebar>
   <main class="w-full min-h-screen">
-    <GuideSidebar client:load domains={domains} />
+    <GuideSidebar client:load transition:persist="guide-sidebar" domains={domains} />
 
-    <div class="lg:pl-56">
-      <div class="max-w-2xl mx-auto px-6 pt-10 pb-24 md:pb-32">
+    <div class="max-w-2xl mx-auto px-6 pt-28 pb-24 md:pb-32">
         <a
           href="/guides"
           class="inline-flex items-center gap-2 text-zinc-600 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors duration-200 mb-14"
@@ -54,6 +48,5 @@ if (firstTopic?.url) {
           </p>
         )}
       </div>
-    </div>
   </main>
 </Layout>

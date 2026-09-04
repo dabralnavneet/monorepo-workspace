@@ -6,6 +6,8 @@ html {
   background: #fafafa;
   color: #18181b;
   scroll-behavior: smooth;
+  /* Keep hash-anchor targets clear of the fixed header. */
+  scroll-padding-top: 5rem;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -61,4 +63,42 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #333; }
 @keyframes accordion-up {
   from { height: var(--radix-accordion-content-height); }
   to { height: 0; }
+}
+
+/* --- Hero theming -------------------------------------------------------------
+   The hero forces its own palette (it's an art panel), so its colours live here
+   as tokens rather than as dark: utilities the component's inline styles can't
+   reach. Flipping .dark on <html> re-resolves them instantly. */
+:root {
+  --hero-bg: #eaf4fc;
+  --hero-ink: #2a2622;
+  --hero-ink-soft: rgba(42, 38, 34, 0.82);
+  --hero-grain-opacity: 0.06;
+  --hero-grain-blend: overlay;
+  --hero-blobs:
+    radial-gradient(60% 55% at 16% 82%, #eaf4fc 0%, rgba(234, 244, 252, 0) 72%),
+    radial-gradient(72% 93% at 78% 26%, #b28fce 0%, rgba(178, 143, 206, 0) 60%),
+    radial-gradient(78% 62% at 88% 84%, #f4b3c2 0%, rgba(244, 179, 194, 0) 62%),
+    radial-gradient(50% 44% at 24% 16%, #a0d8ef 0%, rgba(160, 216, 239, 0) 62%),
+    #eaf4fc;
+}
+
+:root.dark {
+  --hero-bg: #000;
+  --hero-ink: #f3f1ee;
+  --hero-ink-soft: rgba(243, 241, 238, 0.68);
+  --hero-grain-opacity: 0.14;
+  --hero-grain-blend: soft-light;
+  --hero-blobs:
+    radial-gradient(70% 85% at 80% 24%, rgba(126, 77, 173, 0.42) 0%, rgba(126, 77, 173, 0) 62%),
+    radial-gradient(78% 66% at 92% 86%, rgba(178, 72, 110, 0.3) 0%, rgba(178, 72, 110, 0) 64%),
+    radial-gradient(58% 54% at 18% 16%, rgba(52, 116, 166, 0.34) 0%, rgba(52, 116, 166, 0) 62%),
+    #000;
+}
+
+.hero-section { background-color: var(--hero-bg); }
+.hero-blobs { background: var(--hero-blobs); }
+.hero-grain {
+  opacity: var(--hero-grain-opacity);
+  mix-blend-mode: var(--hero-grain-blend);
 }

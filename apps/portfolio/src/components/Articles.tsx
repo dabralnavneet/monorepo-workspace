@@ -1,6 +1,8 @@
 'use client';
 
 import { motion } from 'motion/react';
+import SectionHeader from './SectionHeader';
+import MagneticArrow from './MagneticArrow';
 
 interface Article {
   url: string;
@@ -16,18 +18,7 @@ export default function Articles({ articles }: { articles: Article[] }) {
       id="writing"
       className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32"
     >
-      {/* Section header */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center gap-6 mb-8 sm:mb-14 md:mb-20"
-      >
-        <span className="text-zinc-400 dark:text-zinc-700 font-mono text-xs">01</span>
-        <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">Writing</span>
-        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-900" />
-      </motion.div>
+      <SectionHeader index="01" label="Writing" />
 
       {/* Articles list */}
       <div>
@@ -63,9 +54,7 @@ export default function Articles({ articles }: { articles: Article[] }) {
                 <span className="text-zinc-400 dark:text-zinc-700 font-mono text-xs group-hover:text-zinc-600 dark:group-hover:text-zinc-500 transition-colors duration-300">
                   {article.readTime}
                 </span>
-                <span className="text-zinc-400 dark:text-zinc-700 text-sm group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-all duration-300 group-hover:translate-x-1">
-                  →
-                </span>
+                <MagneticArrow className="text-zinc-400 dark:text-zinc-700 text-sm group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors duration-300" />
               </div>
             </a>
           </motion.div>

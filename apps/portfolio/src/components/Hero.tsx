@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 
 /** Background video playback speed — the clip drifts too fast at 1x. */
 const VIDEO_RATE = 0.5;
@@ -28,19 +28,39 @@ const VIDEO_RATE = 0.5;
 
 const INK = 'var(--hero-ink)';
 const QUOTE = "There is no secret ingredient. it's just you";
+const QUOTE_WORDS = QUOTE.split(' ');
 
 const lineReveal = {
   hidden: { y: '115%' },
   show: { y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } },
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+// The quote resolves word by word — the last one ("you.") a half-beat behind
+// and in the fuller ink, so the line lands on it.
+const quoteContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055, delayChildren: 0.85 } },
 };
+
+const quoteWord = {
+  hidden: { opacity: 0, y: 6, filter: 'blur(4px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const quoteClass = 'max-w-[34ch] whitespace-normal md:max-w-none md:whitespace-nowrap';
+const quoteStyle = {
+  margin: 'clamp(14px, 1.8vw, 26px) 0 0',
+  color: 'var(--hero-ink-soft)',
+  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  fontWeight: 400,
+  lineHeight: 1.45,
+  letterSpacing: '0.01em',
+  fontSize: 'clamp(13px, 1.35vw, 18px)',
+} as const;
 
 export default function Hero({ years: _years }: Readonly<{ years: number }>) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const v = videoRef.current;
@@ -167,25 +187,38 @@ export default function Hero({ years: _years }: Readonly<{ years: number }>) {
             </motion.h1>
           </div>
 
-          {/* Quote — lighter than the name. Wraps on phones, one line from
-              `md` up. */}
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            className="max-w-[34ch] whitespace-normal md:max-w-none md:whitespace-nowrap"
-            style={{
-              margin: 'clamp(14px, 1.8vw, 26px) 0 0',
-              color: 'var(--hero-ink-soft)',
-              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-              fontWeight: 400,
-              lineHeight: 1.45,
-              letterSpacing: '0.01em',
-              fontSize: 'clamp(13px, 1.35vw, 18px)',
-            }}
-          >
-            {QUOTE}.
-          </motion.p>
+          {/* Quote — lighter than the name, resolving word by word (landing on
+              "you."). Wraps on phones, one line from `md` up. */}
+          {reduceMotion ? (
+            <p className={quoteClass} style={quoteStyle}>
+              {QUOTE}.
+            </p>
+          ) : (
+            <motion.p
+              aria-label={`${QUOTE}.`}
+              variants={quoteContainer}
+              initial="hidden"
+              animate="show"
+              className={quoteClass}
+              style={quoteStyle}
+            >
+              {QUOTE_WORDS.map((word, i) => {
+                const last = i === QUOTE_WORDS.length - 1;
+                return (
+                  <span key={word + i}>
+                    <motion.span
+                      aria-hidden="true"
+                      variants={quoteWord}
+                      style={{ display: 'inline-block', color: last ? 'var(--hero-ink)' : undefined }}
+                    >
+                      {last ? `${word}.` : word}
+                    </motion.span>
+                    {!last && ' '}
+                  </span>
+                );
+              })}
+            </motion.p>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import SectionHeader from './SectionHeader';
 
 const links = [
   { label: 'linkedin', href: 'https://linkedin.com/in/navneet-dabral-859707117', external: true },
@@ -14,18 +15,7 @@ export default function Contact() {
       id="contact"
       className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32 border-t border-zinc-200 dark:border-zinc-900"
     >
-      {/* Section header */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center gap-6 mb-8 sm:mb-14 md:mb-20"
-      >
-        <span className="text-zinc-400 dark:text-zinc-700 font-mono text-xs">03</span>
-        <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">Contact</span>
-        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-900" />
-      </motion.div>
+      <SectionHeader index="03" label="Contact" />
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 md:gap-20">
         {/* Heading */}
@@ -66,9 +56,9 @@ export default function Contact() {
               rel={link.external ? 'noopener noreferrer' : undefined}
               className="group flex items-center gap-3 text-zinc-600 dark:text-zinc-500 font-mono text-sm hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
             >
-              <span className="w-4 h-px bg-zinc-300 dark:bg-zinc-800 group-hover:w-6 group-hover:bg-zinc-500 transition-all duration-300" />
+              <span className="w-4 h-px bg-zinc-300 dark:bg-zinc-800 group-hover:w-6 group-hover:bg-cyan-500 dark:group-hover:bg-cyan-400 transition-all duration-300" />
               {link.label}
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs">↗</span>
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs text-cyan-600 dark:text-cyan-400">↗</span>
             </a>
           ))}
         </motion.div>

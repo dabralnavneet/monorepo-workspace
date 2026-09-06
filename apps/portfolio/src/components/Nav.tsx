@@ -25,6 +25,51 @@ function useGuidesHref() {
   return href;
 }
 
+/**
+ * On the landing page, tracks which section (`#writing` / `#guides` / `#contact`)
+ * is centred in the viewport so the matching nav item can pick up the accent.
+ * Inactive anywhere else.
+ */
+function useActiveSection() {
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    const build = () => {
+      if (window.location.pathname !== '/') {
+        setActive(null);
+        return () => {};
+      }
+      const els = ['writing', 'guides', 'contact']
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => el !== null);
+      if (els.length === 0) return () => {};
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          const top = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (top) setActive(top.target.id);
+        },
+        { rootMargin: '-45% 0px -50% 0px' },
+      );
+      els.forEach((el) => io.observe(el));
+      return () => io.disconnect();
+    };
+
+    let teardown = build();
+    const onLoad = () => {
+      teardown();
+      teardown = build();
+    };
+    document.addEventListener('astro:page-load', onLoad);
+    return () => {
+      teardown();
+      document.removeEventListener('astro:page-load', onLoad);
+    };
+  }, []);
+  return active;
+}
+
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
@@ -52,6 +97,13 @@ function ThemeToggle() {
 
 export default function Nav() {
   const guidesHref = useGuidesHref();
+  const active = useActiveSection();
+
+  const items = [
+    { key: 'writing', label: 'writing', href: '/#writing' },
+    { key: 'guides', label: 'guides', href: guidesHref },
+    { key: 'contact', label: 'contact', href: '/#contact' },
+  ];
 
   return (
     <motion.header
@@ -61,24 +113,19 @@ export default function Nav() {
       className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-20 py-5 flex items-center justify-end bg-gradient-to-b from-[#fafafa] dark:from-[#000] to-transparent"
     >
       <nav className="flex items-center gap-5 sm:gap-8">
-        <a
-          href="/#writing"
-          className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
-        >
-          writing
-        </a>
-        <a
-          href={guidesHref}
-          className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
-        >
-          guides
-        </a>
-        <a
-          href="/#contact"
-          className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
-        >
-          contact
-        </a>
+        {items.map((it) => (
+          <a
+            key={it.key}
+            href={it.href}
+            className={`font-mono text-xs uppercase tracking-[0.2em] transition-colors duration-200 ${
+              active === it.key
+                ? 'text-cyan-600 dark:text-cyan-400'
+                : 'text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            {it.label}
+          </a>
+        ))}
         <ThemeToggle />
       </nav>
     </motion.header>

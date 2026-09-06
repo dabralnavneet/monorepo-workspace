@@ -12,7 +12,7 @@ export default function Contact() {
   return (
     <footer
       id="contact"
-      className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-24 md:py-32 border-t border-zinc-200 dark:border-zinc-900"
+      className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32 border-t border-zinc-200 dark:border-zinc-900"
     >
       {/* Section header */}
       <motion.div
@@ -20,14 +20,14 @@ export default function Contact() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.5 }}
-        className="flex items-center gap-6 mb-16 md:mb-20"
+        className="flex items-center gap-6 mb-8 sm:mb-14 md:mb-20"
       >
         <span className="text-zinc-400 dark:text-zinc-700 font-mono text-xs">03</span>
         <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">Contact</span>
         <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-900" />
       </motion.div>
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 md:gap-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 md:gap-20">
         {/* Heading */}
         <div>
           <motion.h2
@@ -80,7 +80,7 @@ export default function Contact() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="mt-16 md:mt-24 pt-8 border-t border-zinc-200 dark:border-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-zinc-400 dark:text-zinc-700 font-mono text-xs"
+        className="mt-12 sm:mt-16 md:mt-24 pt-8 border-t border-zinc-200 dark:border-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-zinc-400 dark:text-zinc-700 font-mono text-xs"
       >
         <span>NAVNEET DABRAL</span>
         <span>© {new Date().getFullYear()}</span>

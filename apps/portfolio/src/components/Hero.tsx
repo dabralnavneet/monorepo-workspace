@@ -106,7 +106,7 @@ export default function Hero({ years: _years }: Readonly<{ years: number }>) {
 
       {/* Two-column grid: panda | text. Stacks (text first, panda second) below
           lg; side-by-side from lg with the panda bled to the bottom edge. */}
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 content-center items-center gap-x-10 gap-y-8 px-6 pt-28 pb-14 sm:px-10 lg:min-h-screen lg:grid-cols-2 lg:gap-x-16 lg:px-16 lg:pb-0">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 content-center items-center gap-x-10 gap-y-8 px-6 pt-24 pb-14 sm:px-10 sm:pt-28 lg:min-h-screen lg:grid-cols-2 lg:gap-x-16 lg:px-16 lg:pb-0">
 
         {/* Panda cell */}
         <motion.div

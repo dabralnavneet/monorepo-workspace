@@ -13,7 +13,7 @@ export default function Guides({ series }: Readonly<{ series: GuideSeries[] }>) 
   return (
     <section
       id="guides"
-      className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-24 md:py-32"
+      className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32"
     >
       {/* Section header */}
       <motion.div
@@ -21,7 +21,7 @@ export default function Guides({ series }: Readonly<{ series: GuideSeries[] }>) 
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.5 }}
-        className="flex items-center gap-6 mb-16 md:mb-20"
+        className="flex items-center gap-6 mb-8 sm:mb-14 md:mb-20"
       >
         <span className="text-zinc-400 dark:text-zinc-700 font-mono text-xs">02</span>
         <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs uppercase tracking-[0.2em]">Guides</span>

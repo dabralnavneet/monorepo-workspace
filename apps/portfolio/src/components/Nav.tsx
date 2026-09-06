@@ -60,7 +60,7 @@ export default function Nav() {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-20 py-5 flex items-center justify-end bg-gradient-to-b from-[#fafafa] dark:from-[#000] to-transparent"
     >
-      <nav className="flex items-center gap-8">
+      <nav className="flex items-center gap-5 sm:gap-8">
         <a
           href="/#writing"
           className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"

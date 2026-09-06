@@ -24,38 +24,105 @@ const { chart, clusterColors, nodeIcons } = Astro.props;
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  async function renderMermaidDiagrams() {
-    // Only touch diagrams that haven't been rendered yet — `astro:page-load`
-    // fires again after every view-transition navigation.
-    const preEls = Array.from(
-      document.querySelectorAll<HTMLElement>('.mermaid:not([data-processed])'),
-    );
-    if (preEls.length === 0) return;
+  // The rendered SVG bakes the theme in, so on a light/dark switch every diagram
+  // has to be rebuilt from its original graph definition — stash that here before
+  // mermaid replaces the <pre>'s text content with markup.
+  const SOURCES = new WeakMap<HTMLElement, string>();
 
-    const isDark = document.documentElement.classList.contains('dark');
-    // 'handDrawn' uses rough.js under the hood for an Excalidraw-style sketchy look.
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      look: 'handDrawn',
-      // Transparent cluster fill avoids a heavy hachure background clashing with the page.
-      themeVariables: { clusterBkg: 'transparent', clusterBorder: 'transparent', fontSize: '17px' },
-      flowchart: { padding: 24, nodeSpacing: 45, rankSpacing: 55 },
-    });
+  const isDarkNow = () => document.documentElement.classList.contains('dark');
+  const dLen = (p: Element) => (p.getAttribute('d') || '').length;
 
-    await mermaid.run({ nodes: preEls });
+  let running = false;
+  let rerunForced = false;
 
-    preEls.forEach((preEl) => {
+  async function renderMermaidDiagrams(force = false) {
+    if (running) {
+      rerunForced = rerunForced || force;
+      return;
+    }
+    running = true;
+    try {
+      const all = Array.from(document.querySelectorAll<HTMLElement>('.mermaid'));
+      for (const pre of all) {
+        if (!SOURCES.has(pre)) SOURCES.set(pre, pre.textContent ?? '');
+      }
+
+      // `force` (a theme switch) rebuilds every diagram; otherwise only the ones
+      // a fresh `astro:page-load` hasn't drawn yet.
+      const targets = force ? all : all.filter((pre) => !pre.hasAttribute('data-processed'));
+      if (targets.length === 0) return;
+
+      for (const pre of targets) {
+        pre.innerHTML = SOURCES.get(pre) ?? pre.textContent ?? '';
+        pre.removeAttribute('data-processed');
+      }
+
+      const isDark = isDarkNow();
+      // 'handDrawn' uses rough.js under the hood for an Excalidraw-style sketchy look.
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        look: 'handDrawn',
+        // Transparent cluster fill avoids a heavy hachure background clashing with the page.
+        themeVariables: { clusterBkg: 'transparent', clusterBorder: 'transparent', fontSize: '17px' },
+        flowchart: { padding: 24, nodeSpacing: 45, rankSpacing: 55 },
+      });
+
+      await mermaid.run({ nodes: targets });
+
+      targets.forEach((preEl) => patchDiagram(preEl, isDark));
+    } finally {
+      running = false;
+      if (rerunForced) {
+        rerunForced = false;
+        void renderMermaidDiagrams(true);
+      }
+    }
+  }
+
+  function patchDiagram(preEl: HTMLElement, isDark: boolean) {
     const svg = preEl.querySelector('svg');
     if (!svg) return;
 
-    // rough.js bakes stroke-width into each shape's own attributes at draw time,
-    // so neither CSS nor themeVariables can override it — patch the DOM directly.
-    svg.querySelectorAll('.node *, .cluster *, .edgePath path').forEach((el) => {
-      if (el.hasAttribute('stroke-width') || el.tagName === 'path' || el.tagName === 'rect') {
-        el.setAttribute('stroke-width', '4');
+    // --- Nodes -------------------------------------------------------------
+    // Each rough.js node is two <path>s: a long hachure "fill" path (its stroke
+    // holds the intended fill colour) and a short outline path. The dense
+    // hachure buries the label — especially over a dark page — so drop it and
+    // give the outline a flat, low-opacity fill instead. Keeps the sketchy edge.
+    svg.querySelectorAll<SVGGElement>('g.rough-node, g.node').forEach((node) => {
+      const paths = Array.from(node.querySelectorAll('path')).sort((a, b) => dLen(b) - dLen(a));
+      if (paths.length >= 2) {
+        const [hachure, outline] = paths;
+        const fill = hachure.getAttribute('stroke') || outline.getAttribute('stroke') || 'currentColor';
+        hachure.style.display = 'none';
+        outline.setAttribute('fill', fill);
+        outline.setAttribute('fill-opacity', isDark ? '0.16' : '0.9');
+        outline.setAttribute('stroke-width', '2');
+      } else if (paths.length === 1) {
+        paths[0].setAttribute('stroke-width', '2');
+      }
+
+      // On a dark page every label must read light, regardless of the dark text
+      // colour a `classDef color:` may have set for the light theme.
+      if (isDark) {
+        node.querySelectorAll<HTMLElement>('.nodeLabel, .nodeLabel *').forEach((el) => {
+          el.style.setProperty('color', '#e4e4e7', 'important');
+        });
+        node.querySelectorAll('text, tspan').forEach((el) => el.setAttribute('fill', '#e4e4e7'));
+      }
+    });
+
+    // --- Edges -----------------------------------------------------------
+    svg.querySelectorAll('.edgePath path, .flowchart-link').forEach((el) => {
+      el.setAttribute('stroke-width', '2.5');
+    });
+
+    // --- Cluster (subgraph) borders ------------------------------------
+    svg.querySelectorAll('g.cluster *').forEach((el) => {
+      if (el.tagName === 'path' || el.tagName === 'rect') {
+        el.setAttribute('stroke-width', '3');
         const stroke = el.getAttribute('stroke') ?? '';
-        if (el.closest('.cluster') && (stroke.includes('1.5873015873%') || stroke === 'transparent' || stroke === '')) {
+        if (stroke.includes('1.5873015873%') || stroke === 'transparent' || stroke === '') {
           el.setAttribute('stroke', isDark ? 'rgba(228, 228, 231, 0.7)' : 'rgba(63, 63, 70, 0.7)');
         }
       }
@@ -76,7 +143,7 @@ const { chart, clusterColors, nodeIcons } = Astro.props;
       });
     }
 
-    // Icon badges straddling each box's top-left corner, like AWS architecture diagrams.
+    // --- Icon badges straddling each box's top-left corner --------------
     const icons = preEl.dataset.nodeIcons ? JSON.parse(preEl.dataset.nodeIcons) : null;
     if (icons) {
       const viewBox = svg.viewBox.baseVal;
@@ -106,9 +173,20 @@ const { chart, clusterColors, nodeIcons } = Astro.props;
         });
       });
     }
-    });
   }
 
-  document.addEventListener('astro:page-load', renderMermaidDiagrams);
-</script>
+  document.addEventListener('astro:page-load', () => void renderMermaidDiagrams(false));
 
+  // Redraw when the site theme toggles — the SVG's colours are baked in at build.
+  if (!(window as unknown as { __mermaidThemeWatch?: boolean }).__mermaidThemeWatch) {
+    (window as unknown as { __mermaidThemeWatch?: boolean }).__mermaidThemeWatch = true;
+    let wasDark = isDarkNow();
+    new MutationObserver(() => {
+      const dark = isDarkNow();
+      if (dark !== wasDark) {
+        wasDark = dark;
+        void renderMermaidDiagrams(true);
+      }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  }
+</script>

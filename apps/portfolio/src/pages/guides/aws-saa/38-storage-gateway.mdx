@@ -1,0 +1,106 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Storage Gateway"
+description: "A hybrid appliance that gives on-premises apps local-feeling file, volume, or tape storage while the data actually lives in AWS."
+domain: "Storage"
+order: 38
+date: "Sep 6, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AwsStorageGateway,
+  AmazonSimpleStorageService,
+  AmazonSimpleStorageServiceGlacier,
+} from "@aws-icons/react/architecture-service";
+import { CorporateDataCenter } from "@aws-icons/react/architecture-group";
+
+export const sgwIcon = awsIconDataUri(AwsStorageGateway);
+export const s3Icon = awsIconDataUri(AmazonSimpleStorageService);
+export const dcIcon = awsIconDataUri(CorporateDataCenter);
+export const glacierIcon = awsIconDataUri(AmazonSimpleStorageServiceGlacier);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+On-premises applications expect **NFS/SMB shares, iSCSI disks, or a tape library** — they can't just call the S3 API. But you want their data in AWS for durability, cost, and cloud analytics. **AWS Storage Gateway** is a **VM or hardware appliance** you run in your data center that presents those familiar local protocols on one side, caches hot data locally for low-latency access, and transparently stores everything in **S3, S3 Glacier, or EBS snapshots** on the other side.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- The **gateway appliance** runs on-prem (VMware/Hyper-V/KVM, an EC2 instance, or an AWS hardware appliance). It associates with **one AWS Region**, where the backing S3 buckets / snapshots live.
+- Local **cache and upload buffer** sit on disks you provide to the appliance; the authoritative copy is always in AWS (regionally, ≥ 3 AZs for S3-backed types).
+- Connectivity to AWS is over the internet, **VPN**, or **Direct Connect**; a **VPC endpoint** keeps traffic private.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:table-large" width={22} height={22} />
+  <h2 class="!m-0">The Gateway Types</h2>
+</div>
+
+| Type | Protocol on-prem | Data lands in | Use it for |
+| --- | --- | --- | --- |
+| **S3 File Gateway** | NFS / SMB | Objects in **S3** (1 file = 1 object) | File shares, ingest for analytics, cloud-backed home directories |
+| **FSx File Gateway** | SMB | **FSx for Windows File Server** | Low-latency on-prem access to a cloud Windows file share |
+| **Volume Gateway – Cached** | iSCSI | **S3**, with local cache | Primary data in AWS, only hot blocks kept on-prem |
+| **Volume Gateway – Stored** | iSCSI | Full copy **on-prem**, async **EBS snapshots** to AWS | Low-latency full local dataset + offsite backup / DR |
+| **Tape Gateway (VTL)** | iSCSI VTL | **S3 / Glacier / Deep Archive** | Drop-in replacement for physical tape backup, kills the tape robot |
+
+<Mermaid
+  chart={`graph LR
+  subgraph DC["On-Premises Data Center"]
+    APP["Apps / Backup software"]
+    GW["Storage Gateway appliance (local cache + upload buffer)"]
+    APP -->|"NFS / SMB / iSCSI / VTL"| GW
+  end
+  GW -->|"HTTPS, over Direct Connect / VPN"| AWS
+  subgraph AWS["AWS Region"]
+    AWS_S3["S3 (File & Cached Volume)"]
+    AWS_EBS["EBS Snapshots (Stored Volume)"]
+    AWS_GLA["S3 Glacier / Deep Archive (Tape Gateway)"]
+  end
+  GW --> AWS_S3
+  GW --> AWS_EBS
+  GW --> AWS_GLA
+  classDef dc fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef aws fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef cold fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class APP,GW dc
+  class AWS_S3,AWS_EBS aws
+  class AWS_GLA cold`}
+  clusterColors={{
+    DC: { stroke: "#3b82f6", dashed: true },
+    AWS: { stroke: "#2e8b3d" },
+  }}
+  nodeIcons={{
+    DC: [dcIcon],
+    GW: [sgwIcon],
+    AWS_S3: [s3Icon],
+    AWS_GLA: [glacierIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay for the **underlying AWS storage** (S3 / Glacier / EBS snapshots) at normal rates, a **per-GB data-write charge** for data transferred into AWS through the gateway, request charges, and **data transfer out** on retrieval. The appliance software itself is free; you supply the on-prem compute and cache disks. Tape Gateway retrievals from Deep Archive carry the usual long retrieval times and fees.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **"Replace physical tape / LTO backups", "eliminate the tape library", "keep backup software unchanged"** → **Tape Gateway (VTL)**.
+- **"On-prem app needs an NFS/SMB share but store files in S3", "ingest on-prem files for analytics"** → **S3 File Gateway**. Windows-specific low latency → **FSx File Gateway**.
+- **Volume Gateway Cached** = primary data in S3, cache on-prem (save local capacity). **Volume Gateway Stored** = full data on-prem, async snapshots to AWS (save nothing locally, gain offsite DR). Don't mix these two up.
+- Storage Gateway is the standard answer for **"hybrid storage"**, **"bursting on-prem file storage to the cloud"**, and **"cloud backup target for legacy systems"**.
+- For **bulk one-time migration** of huge datasets, that's **Snowball / DataSync**, not Storage Gateway (which is for **ongoing** hybrid access).
+- File Gateway stores each file as a **native S3 object**, so cloud applications can read it directly — unlike Volume/Tape gateways whose S3 data is an opaque block/tape format.

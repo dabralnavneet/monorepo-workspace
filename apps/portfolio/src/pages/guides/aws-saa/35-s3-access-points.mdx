@@ -1,0 +1,82 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 Access Points"
+description: "Named front doors to one bucket — each with its own policy and network scope — so a shared bucket doesn't need one giant policy."
+domain: "Storage"
+order: 35
+date: "Sep 6, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AmazonSimpleStorageServiceBucket,
+  AmazonSimpleStorageServiceGeneralAccessPoints,
+} from "@aws-icons/react/resource";
+
+export const bucketIcon = awsIconDataUri(AmazonSimpleStorageServiceBucket);
+export const apIcon = awsIconDataUri(AmazonSimpleStorageServiceGeneralAccessPoints);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+When dozens of applications, teams, and accounts all use **one large shared bucket** (a data lake is the classic case), the single **bucket policy** becomes a sprawling, fragile document that every change risks breaking. **S3 Access Points** fix this: each consumer gets its **own named endpoint** into the bucket, with its **own dedicated access policy** and optional **VPC-only** restriction. You manage many small, purpose-scoped policies instead of one monolith.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A standard access point is **Regional** and bound to **one bucket in the same Region**. It has its own hostname and ARN, e.g. `finance-ap-<account>.s3-accesspoint.<region>.amazonaws.com`.
+- An access point can be **Internet-facing** or **VPC-only** — the latter refuses any request that doesn't arrive through a specified VPC.
+- **Multi-Region Access Points (MRAP)** are **global**: one endpoint that routes each request to the **nearest** bucket among a replicated set, with automatic failover.
+
+<Mermaid
+  chart={`graph TD
+  subgraph BKT["Shared bucket: company-data-lake"]
+    DATA["Objects: /finance/*  /analytics/*  /partner/*"]
+  end
+  FIN["Access Point: finance-ap (policy: RW on /finance/*)"] --> DATA
+  ANA["Access Point: analytics-ap (policy: read-only, VPC-only)"] --> DATA
+  PART["Access Point: partner-ap (policy: read /partner/*, cross-account)"] --> DATA
+  FINU(("Finance app")) --> FIN
+  ANAU(("Analytics VPC")) --> ANA
+  PARTU(("Partner account")) --> PART
+  DATA -.->|"bucket policy delegates to access points"| DELEGATE["Bucket policy: 1 line, allow via any AP"]
+  classDef ap fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef bucket fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class FIN,ANA,PART ap
+  class DATA bucket`}
+  clusterColors={{
+    BKT: { stroke: "#2e8b3d" },
+  }}
+  nodeIcons={{
+    DATA: [bucketIcon],
+    FIN: [apIcon],
+    ANA: [apIcon],
+    PART: [apIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Standard access points are **free** — requests through them are billed at the **normal S3 rate**. **Multi-Region Access Points** add a small **per-GB routing/data-processing charge** on top of standard request, storage, and **replication** costs. **S3 Object Lambda Access Points** additionally bill for the **Lambda invocations** and data returned.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger**: "large shared bucket / data lake with many applications, each needing different, least-privilege access" → **S3 Access Points**, one per consumer.
+- For an access point to work, the **bucket policy must delegate to access points** (an `s3:DataAccessPointAccount` condition) — then the **access point policy** does the fine-grained allow. The request must be permitted by **both**, plus the caller's IAM policy.
+- **VPC-only access points** are the clean way to guarantee a dataset is reachable **only from inside a given VPC**, without writing `aws:SourceVpce` conditions by hand.
+- **Multi-Region Access Points** = "single global endpoint, route users to the closest copy, fail over automatically" — pair with **Cross-Region Replication** and, for writes, **replication with two-way / active-active** rules.
+- **S3 Object Lambda Access Points** run your Lambda on the object **as it's retrieved** — redact PII, resize images, convert formats — without storing a second copy.
+- Access point names are **account- and Region-scoped**, not global like bucket names.

@@ -1,0 +1,99 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "FSx for Windows / Lustre / NetApp / OpenZFS"
+description: "Fully managed third-party filesystems — pick the one whose protocol and feature set your workload already expects."
+domain: "Storage"
+order: 28
+date: "Sep 6, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AmazonFsx,
+  AmazonFsxForWfs,
+  AmazonFsxForLustre,
+  AmazonFsxForNetAppOntap,
+  AmazonFsxForOpenZfs,
+} from "@aws-icons/react/architecture-service";
+
+export const fsxIcon = awsIconDataUri(AmazonFsx);
+export const winIcon = awsIconDataUri(AmazonFsxForWfs);
+export const lustreIcon = awsIconDataUri(AmazonFsxForLustre);
+export const ontapIcon = awsIconDataUri(AmazonFsxForNetAppOntap);
+export const zfsIcon = awsIconDataUri(AmazonFsxForOpenZfs);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+EFS only speaks NFS to Linux. Many real workloads need something specific: Windows apps expect **SMB and Active Directory**; HPC and ML training need a **parallel filesystem** wired to S3; teams migrating off on-prem NetApp want **ONTAP** features like snapshots and dedup unchanged. **Amazon FSx** runs four battle-tested filesystems as a **managed service** — you get the exact protocol and feature set your software was built for, without running the file servers yourself.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An FSx file system is deployed into a **VPC** and can be **Single-AZ** (lower cost, one AZ blast radius) or **Multi-AZ** (a standby in a second AZ with automatic failover). Multi-AZ availability varies by flavour — Windows and ONTAP support it natively; Lustre is Single-AZ (with S3 as the durable copy).
+- Backups go to **S3** (Regional). ONTAP and OpenZFS also support **cross-Region replication**.
+- Clients connect over the VPC via a DNS name; on-prem access is possible over **Direct Connect or VPN**.
+
+<Mermaid
+  chart={`graph TD
+  FSX(("Amazon FSx"))
+  FSX --> WIN["FSx for Windows File Server"]
+  FSX --> LUS["FSx for Lustre"]
+  FSX --> ONT["FSx for NetApp ONTAP"]
+  FSX --> ZFS["FSx for OpenZFS"]
+  WIN -->|"SMB + Active Directory, NTFS ACLs"| WINU(("Windows apps, .NET, SQL Server"))
+  LUS -->|"POSIX, linked to an S3 bucket"| LUSU(("HPC, ML training, media rendering"))
+  ONT -->|"NFS + SMB + iSCSI, snapshots, dedup"| ONTU(("NetApp migrations, multi-protocol"))
+  ZFS -->|"NFS, ZFS snapshots & clones"| ZFSU(("Linux workloads wanting ZFS features"))
+  classDef win fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef lus fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef ont fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef zfs fill:#fdf0e6,stroke:#e0842e,stroke-width:2px,color:#6b3b0f
+  class WIN win
+  class LUS lus
+  class ONT ont
+  class ZFS zfs`}
+  nodeIcons={{
+    WIN: [winIcon],
+    LUS: [lustreIcon],
+    ONT: [ontapIcon],
+    ZFS: [zfsIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:table-large" width={22} height={22} />
+  <h2 class="!m-0">Which One</h2>
+</div>
+
+| Flavour | Protocol | Reach for it when |
+| --- | --- | --- |
+| **Windows File Server** | SMB, integrates with AD / Managed Microsoft AD | Windows/.NET apps, home directories, SQL Server file shares, lift-and-shift of Windows workloads |
+| **Lustre** | POSIX, high-throughput parallel FS | HPC, ML training, genomics, video processing — especially with a **linked S3 bucket** it lazy-loads and writes back to |
+| **NetApp ONTAP** | NFS, SMB, **and** iSCSI simultaneously | Migrating from on-prem NetApp; need snapshots, cloning, compression/dedup, or multi-protocol access to the same data |
+| **OpenZFS** | NFS (v3/v4) | Linux workloads that want ZFS snapshots, instant point-in-time clones, and sub-millisecond latency without ONTAP licensing |
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay for **provisioned storage capacity per GB-month**, provisioned **throughput / SSD IOPS**, and **backups** (per GB in S3). Multi-AZ roughly doubles the storage cost of Single-AZ. Lustre offers cheaper **HDD** and **scratch** options for transient jobs. Unlike EFS, FSx capacity is **provisioned** — you can grow it, but not shrink it — so right-size at creation.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **"Windows" + "file share" + "Active Directory"** → **FSx for Windows File Server**, every time. EFS is Linux/NFS only.
+- **"HPC", "machine learning training", "millions of IOPS", "hundreds of GB/s", "process data in S3"** → **FSx for Lustre**. It can present an S3 bucket as a filesystem and sync changes back.
+- **"Migrating from NetApp / on-prem NAS", "need NFS and SMB access to the same data", "dedup/compression/snapshots"** → **FSx for NetApp ONTAP**.
+- **"Move a ZFS/Linux file server to AWS with minimal changes", "point-in-time clones"** → **FSx for OpenZFS**.
+- Lustre file systems come in **Scratch** (temporary, no replication — cheapest, for short jobs) and **Persistent** (replicated within one AZ, for longer-lived data) deployment types.

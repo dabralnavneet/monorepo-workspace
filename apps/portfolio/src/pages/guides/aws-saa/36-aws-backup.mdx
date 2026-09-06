@@ -1,0 +1,91 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "AWS Backup"
+description: "One policy-driven service to schedule, retain, encrypt, and prove backups across many AWS services — instead of per-service scripts."
+domain: "Storage"
+order: 36
+date: "Sep 6, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AwsBackup,
+  AmazonElasticBlockStore,
+  AmazonEfs,
+  AmazonRds,
+  AmazonDynamoDb,
+} from "@aws-icons/react/architecture-service";
+
+export const backupIcon = awsIconDataUri(AwsBackup);
+export const ebsIcon = awsIconDataUri(AmazonElasticBlockStore);
+export const efsIcon = awsIconDataUri(AmazonEfs);
+export const rdsIcon = awsIconDataUri(AmazonRds);
+export const ddbIcon = awsIconDataUri(AmazonDynamoDb);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Every AWS service has its own backup mechanism — EBS snapshots, RDS automated backups, DynamoDB PITR, EFS backups — each with a different API, schedule, and retention model. Proving to an auditor that _all_ of it is covered is painful. **AWS Backup** centralizes it: you write **backup plans** (schedule + retention + lifecycle + target vault), assign resources by **tag or ARN**, and the service orchestrates and reports on backups across all supported services from one place.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Backup plans, resource assignments, and **backup vaults** are **Regional**. Recovery points are stored in a vault in that Region.
+- **Cross-Region copy** and **cross-account copy** (via AWS Organizations) are first-class features of a backup rule — the standard DR pattern.
+- **Vault Lock** enforces WORM retention (a compliance mode that even the root user cannot shorten or delete), giving ransomware/insider protection.
+- **AWS Backup** can be governed org-wide with **backup policies** in AWS Organizations.
+
+<Mermaid
+  chart={`graph TD
+  PLAN["Backup Plan (schedule: daily 03:00, retain 35d, move to cold after 7d)"]
+  SEL["Resource Selection (by tag: Backup=true  or  by ARN)"]
+  PLAN --> SEL
+  SEL --> EBS["EBS Volumes"]
+  SEL --> EFS["EFS File Systems"]
+  SEL --> RDS["RDS / Aurora"]
+  SEL --> DDB["DynamoDB Tables"]
+  EBS --> VAULT["Backup Vault (KMS-encrypted, Vault Lock optional)"]
+  EFS --> VAULT
+  RDS --> VAULT
+  DDB --> VAULT
+  VAULT -.->|"copy rule"| DR["Vault in another Region / account"]
+  classDef plan fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef vault fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef src fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class PLAN,SEL plan
+  class VAULT,DR vault
+  class EBS,EFS,RDS,DDB src`}
+  nodeIcons={{
+    PLAN: [backupIcon],
+    EBS: [ebsIcon],
+    EFS: [efsIcon],
+    RDS: [rdsIcon],
+    DDB: [ddbIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay for **backup storage per GB-month** (with a cheaper **cold storage** tier for supported services), **restore per GB**, and **cross-Region data transfer** for copies. AWS Backup's own orchestration is free — the cost is the recovery points themselves. Because it's separate storage, a poorly-tuned retention window (e.g. 365 daily backups of a large database) is a real budget line.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger**: "centrally manage and audit backups across multiple services and accounts", "enforce a backup policy org-wide", "single dashboard for backup compliance" → **AWS Backup**.
+- Supported resources include **EBS, EFS, RDS, Aurora, DynamoDB, FSx, Storage Gateway volumes, EC2 (as AMIs), S3, Redshift, DocumentDB, Neptune, and VMware workloads** — know it's broad, not just EBS.
+- **Vault Lock (Compliance mode)** = immutable, cannot be deleted or shortened by anyone including root → the answer for **ransomware protection** and **regulatory retention**.
+- **Cross-Region + cross-account copy** in a backup rule is the exam's preferred **disaster recovery** answer for "protect against Region failure / account compromise".
+- **AWS Backup ≠ replication.** Backups are point-in-time recovery points with retention; replication (e.g. S3 CRR, Aurora global) is continuous. DR designs often use both.
+- Tag-based resource selection means **new resources are protected automatically** the moment they get the right tag — good answer for "ensure future EBS volumes are always backed up".

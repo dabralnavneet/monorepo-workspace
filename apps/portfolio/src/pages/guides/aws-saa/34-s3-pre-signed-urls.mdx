@@ -1,0 +1,79 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 Pre-Signed URLs"
+description: "Handing a client a temporary, signed link so it can upload or download one object directly — without ever seeing your credentials."
+domain: "Storage"
+order: 34
+date: "Sep 6, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2 } from "@aws-icons/react/architecture-service";
+import {
+  AmazonSimpleStorageServiceBucket,
+  AmazonSimpleStorageServiceObject,
+} from "@aws-icons/react/resource";
+
+export const appIcon = awsIconDataUri(AmazonEc2);
+export const bucketIcon = awsIconDataUri(AmazonSimpleStorageServiceBucket);
+export const objIcon = awsIconDataUri(AmazonSimpleStorageServiceObject);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+You want a user's browser or mobile app to download a private file, or upload a large one, **straight to and from S3** — not proxied through your servers (which wastes bandwidth and compute). But the bucket is private and you can't ship AWS credentials to a client. A **pre-signed URL** solves this: your backend, using its own IAM permissions, generates a URL that **embeds a time-limited signature** authorizing **one specific operation on one specific object**. Anyone holding the URL can perform exactly that action until it expires.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- The URL targets the **bucket's Regional S3 endpoint** — the object lives in one Region and that's where the request lands.
+- The signature is generated **entirely client-side by the SDK** from the signer's access key — **no API call to AWS** is needed to mint one.
+- The URL inherits the **signer's permissions**: it can never grant more than the IAM role/user that created it currently has. Revoke or reduce that role's policy and outstanding URLs for those actions stop working.
+
+<Mermaid
+  chart={`graph LR
+  CLIENT(("Browser / Mobile App"))
+  CLIENT -->|"1 . request upload link"| API["Your Backend (IAM role: s3:PutObject)"]
+  API -->|"2 . SDK signs URL (no AWS call), expiry 15 min"| API
+  API -->|"3 . returns pre-signed URL"| CLIENT
+  CLIENT -->|"4 . PUT file bytes directly"| S3["S3 Bucket (private)"]
+  S3 -->|"5 . checks signature, expiry, permissions"| OBJ["Object stored"]
+  S3 -.->|"expired or altered key -> 403"| REJECT(("Denied"))
+  classDef app fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef bucket fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef reject fill:#fdecec,stroke:#d64545,stroke-width:2px,color:#5c1a1a
+  class API app
+  class S3 bucket
+  class REJECT reject`}
+  nodeIcons={{
+    API: [appIcon],
+    S3: [bucketIcon],
+    OBJ: [objIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Generating URLs is **free** — it's a local crypto operation. You pay only the **normal S3 request and data-transfer charges** for the `GET`/`PUT` the client actually performs. The saving is real: the file bytes never traverse your EC2/Lambda layer, so you avoid that compute time and that data-transfer hop.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "allow a user to download a private object temporarily", "let users upload directly to S3 without credentials", "share a file for a limited time" → **pre-signed URL**.
+- Default expiry depends on the signer: URLs signed with **IAM user credentials** can last up to **7 days**; signed with a **role / temporary STS credentials**, they die when those credentials expire (often ≤ 36 h, and never longer).
+- A pre-signed URL is for **one or a few clients and a single object**. For serving **many** users cached content globally, that's **CloudFront signed URLs / signed cookies**, not S3 pre-signed URLs.
+- **Pre-signed `PUT`** for uploads; **pre-signed `POST`** (policy document) when you need the browser to submit an HTML form with constraints like max size or a key prefix.
+- The URL grants the **intersection** of what it was signed for and what the signer can still do — it does **not** freeze permissions at signing time.
+- Combine with **short expiry + `Content-Type`/`Content-MD5` conditions** to stop a leaked upload URL being abused to store arbitrary junk.

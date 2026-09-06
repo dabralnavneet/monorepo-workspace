@@ -1,0 +1,104 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 Storage Classes"
+description: "Same API, same durability — trading retrieval speed and availability for a lower per-GB price as data cools."
+domain: "Storage"
+order: 30
+date: "Sep 6, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AmazonSimpleStorageServiceS3Standard,
+  AmazonSimpleStorageServiceS3IntelligentTiering,
+  AmazonSimpleStorageServiceS3StandardIa,
+  AmazonSimpleStorageServiceS3OneZoneIa,
+  AmazonSimpleStorageServiceS3GlacierInstantRetrieval,
+  AmazonSimpleStorageServiceS3GlacierDeepArchive,
+} from "@aws-icons/react/resource";
+
+export const stdIcon = awsIconDataUri(AmazonSimpleStorageServiceS3Standard);
+export const itIcon = awsIconDataUri(AmazonSimpleStorageServiceS3IntelligentTiering);
+export const iaIcon = awsIconDataUri(AmazonSimpleStorageServiceS3StandardIa);
+export const ozIcon = awsIconDataUri(AmazonSimpleStorageServiceS3OneZoneIa);
+export const girIcon = awsIconDataUri(AmazonSimpleStorageServiceS3GlacierInstantRetrieval);
+export const deepIcon = awsIconDataUri(AmazonSimpleStorageServiceS3GlacierDeepArchive);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Most data gets cold fast — an invoice PDF is read constantly for a week, then almost never. Paying S3 Standard prices for it forever is waste. **S3 Storage Classes** let the _same object_, through the _same API_, sit on progressively cheaper storage as it ages. **Durability stays at 11 nines** across every class (except One Zone). What changes is **availability, minimum storage duration, per-GB price, and how fast/expensively you can read it back**.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Every class stores data **across ≥ 3 AZs in the bucket's Region** — **except S3 One Zone-IA**, which uses a **single AZ** and therefore drops to ~99.5% durability against AZ loss (the 11-nines figure assumes the AZ survives).
+- Storage class is an **object-level property**. Different objects in one bucket can be in different classes, and **Lifecycle rules** transition them automatically.
+- Glacier classes are **not a separate service** here — they're storage classes _inside_ S3, addressed by normal S3 keys.
+
+<Mermaid
+  chart={`graph LR
+  HOT["S3 Standard (frequent access, ms latency)"] -->|"not accessed 30d"| IA["S3 Standard-IA (infrequent, retrieval fee)"]
+  IA -->|"90d"| GIR["Glacier Instant Retrieval (ms, archive price)"]
+  GIR -->|"180d"| GFR["Glacier Flexible Retrieval (mins to 12h)"]
+  GFR -->|"years"| DEEP["Glacier Deep Archive (12h to 48h, cheapest)"]
+  HOT -.->|"unknown / changing pattern"| IT["S3 Intelligent-Tiering (auto-moves, no retrieval fee)"]
+  HOT -.->|"reproducible data, cost over durability"| OZ["S3 One Zone-IA (single AZ)"]
+  classDef hot fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef warm fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef cold fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef special fill:#fdf0e6,stroke:#e0842e,stroke-width:2px,color:#6b3b0f
+  class HOT hot
+  class IA,GIR warm
+  class GFR,DEEP cold
+  class IT,OZ special`}
+  nodeIcons={{
+    HOT: [stdIcon],
+    IA: [iaIcon],
+    GIR: [girIcon],
+    DEEP: [deepIcon],
+    IT: [itIcon],
+    OZ: [ozIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:table-large" width={22} height={22} />
+  <h2 class="!m-0">The Classes</h2>
+</div>
+
+| Class | Retrieval | Min duration | Use it for |
+| --- | --- | --- | --- |
+| **Standard** | Instant, ms | none | Active data, websites, analytics inputs |
+| **Intelligent-Tiering** | Instant (auto-tiers) | none | Data with **unknown or shifting** access patterns — set and forget |
+| **Standard-IA** | Instant, ms + per-GB fee | 30 days | Backups, older files read a few times a month |
+| **One Zone-IA** | Instant, ms + per-GB fee | 30 days | **Re-creatable** data where a single-AZ risk is acceptable |
+| **Glacier Instant Retrieval** | Instant, ms + fee | 90 days | Archives you still occasionally need _immediately_ (medical images) |
+| **Glacier Flexible Retrieval** | Minutes–12 h | 90 days | Backups, DR — expedited/standard/bulk retrieval tiers |
+| **Glacier Deep Archive** | 12–48 h | 180 days | Compliance/regulatory retention, tape replacement — cheapest storage on AWS |
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Per-GB storage falls **roughly 10× from Standard to Deep Archive**, but colder classes add **retrieval charges** and **minimum storage durations** — delete or transition an IA object before 30 days and you still pay for 30. Intelligent-Tiering charges a small **per-object monitoring fee**, so it's not economical for millions of tiny objects. The cost mistake the exam loves: putting frequently-read data in IA/Glacier and getting crushed by retrieval fees.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **"Access pattern is unknown / unpredictable"** → **Intelligent-Tiering**. It's the default correct answer whenever the question refuses to tell you how often data is read.
+- **"Data can be regenerated" / "thumbnails" / "logs we could rebuild"** + cost focus → **One Zone-IA**.
+- **"Retrieve within milliseconds" but "rarely accessed" and "archive"** → **Glacier Instant Retrieval**. If minutes-to-hours is fine → **Flexible Retrieval**. If "7–10 years, regulatory, lowest cost" → **Deep Archive**.
+- Transitions must go **warm → cold**; you can't lifecycle an object from Glacier back to Standard automatically — that requires a **restore** (temporary copy) then a manual copy.
+- **Lifecycle policies** act on age or on **noncurrent version age** (with versioning) and can also **expire** objects and **abort incomplete multipart uploads** — mention that last one for cost-cleanup questions.
+- Glacier Flexible Retrieval retrieval tiers: **Expedited** (1–5 min), **Standard** (3–5 h), **Bulk** (5–12 h, cheapest).

@@ -1,0 +1,105 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 Overview"
+description: "Virtually unlimited object storage over HTTP — eleven nines of durability, and the default landing spot for almost all data on AWS."
+domain: "Storage"
+order: 29
+date: "Sep 6, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonSimpleStorageService } from "@aws-icons/react/architecture-service";
+import {
+  AmazonSimpleStorageServiceBucket,
+  AmazonSimpleStorageServiceObject,
+} from "@aws-icons/react/resource";
+
+export const s3Icon = awsIconDataUri(AmazonSimpleStorageService);
+export const bucketIcon = awsIconDataUri(AmazonSimpleStorageServiceBucket);
+export const objIcon = awsIconDataUri(AmazonSimpleStorageServiceObject);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Block and file storage force you to decide capacity up front and manage servers. **Amazon S3** removes both problems: it's **object storage** exposed as a simple HTTP API (`PUT`, `GET`, `DELETE`), with **no capacity limit**, **11 nines (99.999999999%) of durability**, and a flat cost model of pay-for-what-you-store. It's where backups, logs, data lakes, static assets, media, and analytics inputs live by default on AWS.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:cube-outline" width={22} height={22} />
+  <h2 class="!m-0">Buckets, Objects, Keys</h2>
+</div>
+
+- A **bucket** is a container with a **globally unique name** (across all AWS accounts on Earth) tied to **one Region**.
+- An **object** is a file (up to **5 TB**) plus metadata. Its **key** is the full string after the bucket name — `logs/2026/09/app.log`. The `/` characters are just part of the key; S3 has **no real folders**, only a flat keyspace with prefix-based listing.
+- Objects are **immutable** — you replace them with a new `PUT`, you don't edit in place.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- The S3 **namespace is global**, but a bucket's **data lives in one Region** and never leaves it unless you configure **replication**.
+- Within that Region, S3 stores every object **redundantly across a minimum of three Availability Zones** (except One Zone-IA), which is where the durability guarantee comes from.
+- New objects have **strong read-after-write consistency** for `PUT`, `GET`, `LIST`, and `DELETE` — no more waiting for changes to propagate.
+
+<Mermaid
+  chart={`graph LR
+  CLIENT(("Client / App / SDK")) -->|"HTTPS: PUT / GET / DELETE"| API["S3 Regional Endpoint"]
+  subgraph REGION["AWS Region — us-east-1"]
+    API --> BUCKET["Bucket: my-app-data (globally unique name)"]
+    BUCKET --> OBJ["Object key: uploads/2026/img.png"]
+    subgraph DUR["Redundant across >= 3 AZs"]
+      OBJ --> AZ1["AZ a"]
+      OBJ --> AZ2["AZ b"]
+      OBJ --> AZ3["AZ c"]
+    end
+  end
+  BUCKET -.->|"optional replication"| DEST["Bucket in another Region"]
+  classDef bucket fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef obj fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class BUCKET,DEST bucket
+  class OBJ obj`}
+  clusterColors={{
+    REGION: { stroke: "#2e8b3d" },
+    DUR: { stroke: "#3b82f6", dashed: true },
+  }}
+  nodeIcons={{
+    API: [s3Icon],
+    BUCKET: [bucketIcon],
+    DEST: [bucketIcon],
+    OBJ: [objIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:shield-key-outline" width={22} height={22} />
+  <h2 class="!m-0">Security Model</h2>
+</div>
+
+- **Private by default.** Nothing is public unless you explicitly allow it.
+- Access is granted by, in rough order of preference: **IAM identity policies**, **bucket policies** (resource-based, JSON), **S3 Access Points**, and legacy **ACLs**.
+- **Block Public Access** is on by default at the account and bucket level and overrides any policy that would make objects public — a deliberate guardrail against the classic "leaky S3 bucket" headline.
+- Encryption at rest is **on by default** (**SSE-S3**); you can upgrade to **SSE-KMS** (audited, customer-controlled keys) or **SSE-C** / client-side.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Four independent dimensions: **storage per GB-month** (varies a lot by storage class), **requests** (`PUT`/`GET`/`LIST` priced per thousand), **data transfer out** to the internet (transfer _in_ is free; transfer to CloudFront is free), and **management features** (replication, inventory, analytics). There's no charge for the bucket itself or for the first byte you don't store.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- Bucket names are **global and DNS-compliant** — lowercase, no underscores, 3–63 chars. Two accounts can't own the same name simultaneously.
+- Max object size is **5 TB**; any upload over **5 GB must use multipart upload** (and multipart is recommended above ~100 MB for resilience and speed).
+- **S3 is not a filesystem** — no partial writes, no rename (rename = copy + delete), no locking. If a question needs POSIX semantics, that's EFS/FSx, not S3.
+- For very high request rates, S3 scales to **3,500 writes and 5,500 reads per second per prefix** — spread load across key prefixes if you need more.
+- **Transfer Acceleration** routes uploads through the nearest CloudFront edge for faster long-distance transfers; **VPC Gateway Endpoints** keep S3 traffic off the internet entirely and are free.
+- Enable **Versioning + MFA Delete + a lifecycle policy** for the canonical "protect against accidental deletion and control cost" answer.

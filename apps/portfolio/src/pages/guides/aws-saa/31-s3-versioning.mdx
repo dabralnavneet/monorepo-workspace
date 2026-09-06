@@ -1,0 +1,79 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 Versioning"
+description: "Keeping every version of every object so an overwrite or delete is never destructive — it just adds a marker."
+domain: "Storage"
+order: 31
+date: "Sep 6, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import {
+  AmazonSimpleStorageServiceBucket,
+  AmazonSimpleStorageServiceObject,
+} from "@aws-icons/react/resource";
+
+export const bucketIcon = awsIconDataUri(AmazonSimpleStorageServiceBucket);
+export const objIcon = awsIconDataUri(AmazonSimpleStorageServiceObject);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+S3 objects are immutable, but the _key_ isn't — a `PUT` to an existing key **overwrites** it, and a `DELETE` removes it. A bad deploy, a buggy script, or a fat-fingered console click can wipe data with no undo. **S3 Versioning** solves this: once enabled on a bucket, every `PUT` creates a **new version** with its own version ID, and a `DELETE` just drops a **delete marker** on top. Nothing is truly gone — you recover by deleting the marker or requesting an older version ID.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Versioning is a **bucket-level setting** in the bucket's Region. It has three states: **Unversioned** (default), **Enabled**, and **Suspended**.
+- Once enabled, a bucket can only be **suspended**, never returned to fully unversioned — existing versions are kept.
+- Versioning is a **prerequisite** for **Cross-Region Replication** and works hand-in-hand with **lifecycle rules** that expire noncurrent versions.
+
+<Mermaid
+  chart={`graph TD
+  P1["PUT report.pdf"] --> V1["Version v1 (current)"]
+  P2["PUT report.pdf (overwrite)"] --> V2["Version v2 (current)"]
+  V1 -.->|"now noncurrent"| V1n["Version v1 (noncurrent)"]
+  DEL["DELETE report.pdf"] --> DM["Delete Marker (current)"]
+  V2 -.->|"now noncurrent"| V2n["Version v2 (noncurrent)"]
+  GET1["GET report.pdf"] -->|"returns"| DM
+  RECOVER["Recover: delete the marker, or GET a prior versionId"] --> V2n
+  LIFECYCLE["Lifecycle: expire noncurrent after 30d"] -.->|"permanently removes"| V1n
+  classDef current fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef old fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef marker fill:#fdecec,stroke:#d64545,stroke-width:2px,color:#5c1a1a
+  class V1,V2 current
+  class V1n,V2n old
+  class DM marker`}
+  nodeIcons={{
+    V1: [objIcon],
+    V2: [objIcon],
+    V1n: [objIcon],
+    V2n: [objIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You are billed for **every version you keep** at its storage class's normal rate — a bucket with heavy overwrites and no cleanup policy can balloon to many times the "visible" size. The standard mitigation is a **lifecycle rule** to transition noncurrent versions to IA/Glacier and **expire** them after N days. Delete markers themselves are tiny (they're zero-byte) but still count as objects for request/listing purposes.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **"Protect against accidental deletion / overwrite"** → **enable Versioning**, and for stronger protection add **MFA Delete** (requires an MFA token to permanently delete a version or change versioning state — can only be enabled by the root user via API/CLI).
+- A **plain `DELETE`** on a versioned bucket is **non-destructive** (adds a marker). A **`DELETE` with a specific version ID** is **permanent**.
+- To restore a deleted object: **delete its delete marker**. To roll back an overwrite: **copy the older version onto itself** so it becomes current.
+- **Suspending** versioning stops new versions being created but **does not delete** existing ones; new overwrites get a `null` version ID.
+- Enabling versioning on a bucket that already has objects: those existing objects get a **version ID of `null`** until they're next overwritten.
+- Pair versioning with **S3 Object Lock** (WORM) when the requirement is "cannot be deleted or modified for a retention period" — compliance mode can't even be overridden by the root account.

@@ -1,0 +1,97 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 ACL and Resource Policies"
+description: "The four ways to grant access to an S3 object — and how AWS evaluates them together to reach an allow or deny."
+domain: "Storage"
+order: 32
+date: "Sep 6, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonSimpleStorageService, AwsIdentityAndAccessManagement } from "@aws-icons/react/architecture-service";
+import { AmazonSimpleStorageServiceBucket } from "@aws-icons/react/resource";
+
+export const s3Icon = awsIconDataUri(AmazonSimpleStorageService);
+export const iamIcon = awsIconDataUri(AwsIdentityAndAccessManagement);
+export const bucketIcon = awsIconDataUri(AmazonSimpleStorageServiceBucket);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Access to an S3 object can be granted from **several directions at once** — the caller's IAM policy, the bucket's own policy, a legacy ACL, an Access Point. Without a clear evaluation model, you can't reason about whether a given request is allowed, and you get either accidental data leaks or mysterious `AccessDenied`. This topic is that model: **what the four mechanisms are, when to use each, and the order AWS combines them in.**
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- **Identity (IAM) policies** are **global** — attached to a user, group, or role in your account, they travel with the principal across every Region and service.
+- **Bucket policies** and **ACLs** are **resource-based** and scoped to the **bucket in its Region**. A bucket policy is the primary tool for **cross-account** access and for conditions like "only over HTTPS" or "only from this VPC endpoint".
+- **Block Public Access** settings apply at the **account** and **bucket** level and are evaluated **before** any policy — they can veto a grant no policy can restore.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:key-chain" width={22} height={22} />
+  <h2 class="!m-0">The Four Mechanisms</h2>
+</div>
+
+| Mechanism | Attached to | Reach for it when |
+| --- | --- | --- |
+| **IAM identity policy** | user / group / role | The caller is **in your account** and you manage permissions per-principal |
+| **Bucket policy** | the bucket (JSON) | **Cross-account** access, blanket rules (`aws:SecureTransport`, `aws:SourceVpce`), making a prefix public |
+| **S3 Access Point policy** | a named access point | Many apps sharing one bucket, each needing its **own** scoped-down policy |
+| **ACL** (bucket / object) | bucket or object | **Legacy.** Only for niche cases like objects written by another account that must stay readable by the bucket owner. AWS recommends **disabling ACLs** (Bucket Owner Enforced) |
+
+<Mermaid
+  chart={`graph TD
+  REQ(("Request: GET object")) --> BPA{"Block Public Access allows this?"}
+  BPA -->|"no (public grant blocked)"| DENY(("Access Denied"))
+  BPA -->|"yes"| EXPDENY{"Any explicit Deny? (IAM / bucket / AP / VPCe / SCP)"}
+  EXPDENY -->|"yes"| DENY
+  EXPDENY -->|"no"| ALLOW{"Any Allow? (IAM policy OR bucket policy OR ACL)"}
+  ALLOW -->|"yes"| GRANT(("Access Allowed"))
+  ALLOW -->|"no (implicit deny)"| DENY
+  classDef q fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef deny fill:#fdecec,stroke:#d64545,stroke-width:2px,color:#5c1a1a
+  classDef grant fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class BPA,EXPDENY,ALLOW q
+  class DENY deny
+  class GRANT grant`}
+  nodeIcons={{
+    ALLOW: [iamIcon],
+    GRANT: [bucketIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:scale-balance" width={22} height={22} />
+  <h2 class="!m-0">How Evaluation Works</h2>
+</div>
+
+1. **Block Public Access** is checked first — if a grant would make the object public and BPA is on, the request is denied outright.
+2. **An explicit `Deny` anywhere always wins** — in an IAM policy, bucket policy, access point policy, VPC endpoint policy, or an Organizations SCP.
+3. Otherwise, the request is allowed if **at least one** `Allow` applies — the union of the identity policy **and** the bucket policy **and** ACLs. They are additive, not "both must agree" (except cross-account, where you need an allow on **both** sides).
+4. With **no matching `Allow`**, the default is an **implicit deny**.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Policies and ACLs are **free**. The only related cost is indirect: enabling **S3 Access Points** or logging access decisions via **CloudTrail data events** / **S3 server access logs** carries the usual request and storage charges for those features.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Cross-account access** needs an `Allow` on **both** sides: the resource owner's **bucket policy** (or ACL) grants the other account, and that account's **IAM policy** allows its principal to call S3. Missing either → `AccessDenied`.
+- **Explicit deny beats any allow** — a common "why can't this role read the bucket" answer is an SCP or bucket policy `Deny` with a condition the caller doesn't meet.
+- **Force encryption in transit** with a bucket policy that denies when `aws:SecureTransport` is `false`. **Lock a bucket to a VPC** with `aws:SourceVpce`.
+- **Prefer disabling ACLs** (Object Ownership → *Bucket owner enforced*). Modern guidance is: IAM + bucket policies + access points, ACLs off.
+- **"Grant one specific application least-privilege access to part of a shared bucket"** → **S3 Access Point** with its own policy, rather than growing the bucket policy.
+- Making objects public is done with a **bucket policy `Principal: "*"`** _and_ turning off the relevant Block Public Access toggles — but for websites the better pattern is **private bucket + CloudFront with OAC**.

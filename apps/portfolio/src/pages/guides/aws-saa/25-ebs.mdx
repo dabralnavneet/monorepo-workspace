@@ -1,0 +1,104 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "EBS"
+description: "Network-attached block storage that behaves like a physical disk — durable, resizable, and independent of the instance's lifecycle."
+domain: "Storage"
+order: 25
+date: "Sep 6, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonElasticBlockStore, AmazonEc2 } from "@aws-icons/react/architecture-service";
+import {
+  AmazonElasticBlockStoreVolume,
+  AmazonElasticBlockStoreSnapshot,
+} from "@aws-icons/react/resource";
+
+export const ebsIcon = awsIconDataUri(AmazonElasticBlockStore);
+export const volIcon = awsIconDataUri(AmazonElasticBlockStoreVolume);
+export const snapIcon = awsIconDataUri(AmazonElasticBlockStoreSnapshot);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+An EC2 instance's local disks vanish the moment the instance stops or fails. **Amazon EBS (Elastic Block Store)** solves this by providing **network-attached block volumes** that live independently of any instance: you attach a volume to an instance, it appears as a raw block device you can format and mount, and the data survives stop/start, instance replacement, and hardware failure. It's the storage you reach for whenever you need a real filesystem or a database's data directory on EC2.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An EBS volume is **AZ-locked** — it can only be attached to an instance in the **same Availability Zone**. It is replicated across multiple devices _within_ that AZ for durability, but the AZ is the blast radius.
+- To move a volume to another AZ or Region, you take a **snapshot** (stored in S3, regional) and create a new volume from it in the target AZ; snapshots can also be **copied across Regions**.
+- **Multi-Attach** (io1/io2 only) lets one volume attach to multiple instances, but still only within a single AZ.
+
+<Mermaid
+  chart={`graph LR
+  subgraph AZA["Availability Zone A"]
+    EC2["EC2 Instance"]
+    VOL["EBS Volume (gp3, 100 GiB)"]
+    EC2 -->|"attach as /dev/xvdf"| VOL
+  end
+  VOL -->|"point-in-time snapshot"| SNAP["EBS Snapshot"]
+  subgraph S3["Amazon S3 (Regional, AWS-managed)"]
+    SNAP
+  end
+  SNAP -->|"create volume"| VOLB["EBS Volume in AZ B"]
+  SNAP -.->|"copy snapshot"| REGION2["Another Region"]
+  subgraph AZB["Availability Zone B"]
+    VOLB
+  end
+  classDef vol fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef snap fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class VOL,VOLB vol
+  class SNAP snap`}
+  clusterColors={{
+    AZA: { stroke: "#3b82f6", dashed: true },
+    AZB: { stroke: "#3b82f6", dashed: true },
+    S3: { stroke: "#2e8b3d" },
+  }}
+  nodeIcons={{
+    EC2: [ec2Icon],
+    VOL: [volIcon],
+    VOLB: [volIcon],
+    SNAP: [snapIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:layers-triple-outline" width={22} height={22} />
+  <h2 class="!m-0">Volume Types</h2>
+</div>
+
+| Type | Family | Best for | Key limit |
+| --- | --- | --- | --- |
+| **gp3** | SSD | General purpose default — boot volumes, most workloads | 3,000 IOPS / 125 MB/s baseline, provisioned independently of size |
+| **gp2** | SSD | Legacy general purpose | IOPS scale with size (3 IOPS/GiB) |
+| **io2 Block Express** | SSD | Latency-sensitive databases needing sustained high IOPS | Up to 256,000 IOPS, 99.999% durability |
+| **st1** | HDD | Big, sequential throughput — log processing, data warehouses | Cannot be a boot volume |
+| **sc1** | HDD | Cold, infrequently accessed data | Lowest cost, cannot be a boot volume |
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay for **provisioned capacity per GB-month** — whether the volume is 5% full or 95% full — for the entire time the volume exists, even while its instance is stopped. gp3 additionally lets you pay separately for **IOPS and throughput above the free baseline**. **Snapshots** bill per GB-month of _changed_ blocks (they're incremental), stored in S3. Deleting the instance does **not** delete attached volumes unless "Delete on Termination" is set — orphaned volumes are a classic silent cost leak.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **"Volume won't attach"** is almost always an **AZ mismatch** — the volume and instance must be in the same AZ. The fix is snapshot → create volume in the right AZ.
+- Snapshots are **incremental** but deletion is safe — AWS keeps whatever blocks later snapshots still need. Restoring from a snapshot is **lazy-loaded** from S3, so first-touch reads are slow unless you enable **Fast Snapshot Restore** (extra cost).
+- gp3 is the modern default: on gp2 you had to over-provision size just to get IOPS; on **gp3 you provision IOPS/throughput directly**, usually at ~20% lower cost.
+- EBS volumes can be **encrypted** with KMS; encryption is set at creation. You can't un-encrypt, but you can snapshot and restore into an encrypted volume. Snapshots of an encrypted volume are encrypted automatically.
+- You can **resize a volume, change its type, or adjust IOPS live** (Elastic Volumes) without detaching — but you must then extend the filesystem inside the OS.
+- For **RAID**: RAID 0 across volumes for more raw IOPS/throughput; never rely on RAID for durability — use snapshots.

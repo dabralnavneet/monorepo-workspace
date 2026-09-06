@@ -1,0 +1,99 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "EFS"
+description: "A managed NFS filesystem many instances can mount at once, growing and shrinking automatically across every AZ in a Region."
+domain: "Storage"
+order: 27
+date: "Sep 6, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEfs, AmazonEc2 } from "@aws-icons/react/architecture-service";
+import { PrivateSubnet } from "@aws-icons/react/architecture-group";
+
+export const efsIcon = awsIconDataUri(AmazonEfs);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const subnetIcon = awsIconDataUri(PrivateSubnet);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+An EBS volume attaches to **one instance in one AZ**. But plenty of workloads — a fleet of web servers sharing user uploads, a CMS, CI workers, container tasks — need **many machines reading and writing the same files at the same time**. **Amazon EFS** is a fully managed **NFS v4** filesystem: you mount it from thousands of instances (or Lambda, or containers) concurrently, and it **grows and shrinks automatically** as you add or delete files. No capacity planning, no resizing.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- EFS is a **Regional** service. In **Standard** mode, data is stored **redundantly across multiple AZs**, so it survives a full AZ outage.
+- You reach it through **mount targets** — one **elastic network interface per AZ**, each with its own IP, living in a subnet you choose. Instances mount the target in their own AZ to avoid cross-AZ data charges.
+- **One Zone** storage classes keep data in a **single AZ** for ~47% lower cost, trading away the multi-AZ durability.
+- Access is Linux-only (NFS). Windows workloads use **FSx**, not EFS.
+
+<Mermaid
+  chart={`graph TD
+  subgraph REGION["AWS Region"]
+    EFS["EFS File System (elastic, multi-AZ)"]
+    subgraph AZA["Availability Zone A"]
+      MTA["Mount Target (ENI)"]
+      APPA["App Instances"]
+      APPA -->|"NFS v4"| MTA
+    end
+    subgraph AZB["Availability Zone B"]
+      MTB["Mount Target (ENI)"]
+      APPB["App Instances"]
+      APPB -->|"NFS v4"| MTB
+    end
+    MTA --> EFS
+    MTB --> EFS
+  end
+  classDef fs fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef app fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class EFS fs
+  class APPA,APPB app`}
+  clusterColors={{
+    REGION: { stroke: "#2e8b3d" },
+    AZA: { stroke: "#3b82f6", dashed: true },
+    AZB: { stroke: "#3b82f6", dashed: true },
+  }}
+  nodeIcons={{
+    EFS: [efsIcon],
+    APPA: [ec2Icon],
+    APPB: [ec2Icon],
+    AZA: [subnetIcon],
+    AZB: [subnetIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:layers-triple-outline" width={22} height={22} />
+  <h2 class="!m-0">Storage Classes & Modes</h2>
+</div>
+
+- **Standard** and **One Zone** — the durability tier (multi-AZ vs single-AZ).
+- **Infrequent Access (IA)** and **Archive** — cheaper per-GB tiers with a per-access retrieval fee. **Lifecycle Management** moves files between tiers automatically based on last-access time. **EFS Intelligent-Tiering** does this for you with no retrieval charge.
+- **Throughput**: *Elastic* (default, pay per use, scales to demand), *Bursting* (scales with size), *Provisioned* (fixed high throughput regardless of size).
+- **Performance**: *General Purpose* (lowest latency, default) vs *Max I/O* (higher aggregate throughput, higher latency — legacy).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay **per GB stored** with **no pre-provisioning** — but EFS Standard is roughly **3× the price of gp3 EBS** and **~7× the price of S3 Standard** per GB. That premium buys the shared POSIX filesystem. Lifecycle policies into IA/Archive cut idle-data cost dramatically. Provisioned Throughput adds a separate MB/s charge. Cross-AZ traffic to a mount target in another AZ is billed as data transfer.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Decision tree**: one instance, block device, database → **EBS**. Many Linux instances, shared POSIX files → **EFS**. Windows / SMB → **FSx for Windows**. Object storage over HTTP → **S3**.
+- EFS scales to **petabytes** and **thousands of concurrent NFS clients** automatically — "shared file storage that scales with no capacity planning" is the classic EFS trigger.
+- Enable **lifecycle management to IA** for "reduce cost of a file share where most files are rarely touched."
+- Secure it with **security groups on the mount targets**, **IAM authorization for NFS**, and **encryption at rest (KMS) + in transit (TLS)**.
+- **EFS Access Points** enforce a specific POSIX user/group and a root directory per application — the standard way to share one filesystem safely between multiple apps or containers.

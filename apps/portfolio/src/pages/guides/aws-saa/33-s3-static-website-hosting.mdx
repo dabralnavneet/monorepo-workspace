@@ -1,0 +1,74 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "S3 Static Website Hosting"
+description: "Serving HTML, CSS, JS and assets straight from a bucket — no servers — and why production fronts it with CloudFront."
+domain: "Storage"
+order: 33
+date: "Sep 6, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonCloudFront, AmazonRoute53 } from "@aws-icons/react/architecture-service";
+import { AmazonSimpleStorageServiceBucket } from "@aws-icons/react/resource";
+
+export const cfIcon = awsIconDataUri(AmazonCloudFront);
+export const r53Icon = awsIconDataUri(AmazonRoute53);
+export const bucketIcon = awsIconDataUri(AmazonSimpleStorageServiceBucket);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+A single-page app or a marketing site is just static files. Running EC2 or a container to serve them is pure overhead. **S3 Static Website Hosting** turns a bucket into a web server: enable the feature, set an **index document** and an **error document**, and S3 answers HTTP `GET`s for your objects at a website endpoint — infinitely scalable, no patching, pay only for storage and requests.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- The **website endpoint** is **Regional**: `http://<bucket>.s3-website-<region>.amazonaws.com`. It is **HTTP only** — no HTTPS on the raw S3 website endpoint.
+- To get **HTTPS, a custom domain, and global low latency**, you front the bucket with **CloudFront** (global) and point **Route 53** (global) at the distribution.
+- The bucket still stores data in its one Region; CloudFront caches copies at edge locations worldwide.
+
+<Mermaid
+  chart={`graph LR
+  USER(("Browser")) -->|"https://www.example.com"| R53["Route 53 (alias record)"]
+  R53 --> CF["CloudFront Distribution (HTTPS, global cache, WAF)"]
+  CF -->|"cache miss, Origin Access Control"| BUCKET["S3 Bucket (private, static files)"]
+  CF -.->|"ACM cert for the custom domain"| ACM["AWS Certificate Manager"]
+  BUCKET -.->|"raw website endpoint: HTTP only, no custom cert"| DIRECT(("Direct S3 access (dev only)"))
+  classDef edge fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef bucket fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef dns fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class CF edge
+  class BUCKET bucket
+  class R53 dns`}
+  nodeIcons={{
+    CF: [cfIcon],
+    R53: [r53Icon],
+    BUCKET: [bucketIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Just **S3 storage + requests + data transfer out**. Adding CloudFront adds its **request and data-transfer-out** charges, but transfer **from S3 to CloudFront is free** and CloudFront's per-GB egress is often cheaper than S3's — so a busy site can end up **cheaper** with CloudFront in front, on top of getting HTTPS and caching. **ACM certificates for use with CloudFront are free.**
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Raw S3 website hosting = HTTP only.** Any requirement for **HTTPS, a TLS cert, or a custom domain with SSL** means **CloudFront in front** (with an **ACM certificate**, which for CloudFront must be in **us-east-1**).
+- The recommended secure pattern is a **private bucket** + **CloudFront with Origin Access Control (OAC)** so the bucket is reachable **only** through CloudFront, never directly. Making the bucket itself public is the older, discouraged approach.
+- The **website endpoint** and the **REST API endpoint** for a bucket are different hosts and behave differently (index/error document handling, redirects) — know that the website endpoint is the one that does folder-style `index.html` resolution.
+- Point a **custom apex domain** (`example.com`) at the site with a **Route 53 alias record** to the CloudFront distribution (or, without CloudFront, an alias to the S3 website endpoint — same-name bucket required).
+- S3 website hosting supports **redirection rules** and **per-object redirect metadata** for things like moving old URLs.
+- For cross-Region resilience you can host the bucket in two Regions with **replication** and use **Route 53 failover / CloudFront origin groups**.

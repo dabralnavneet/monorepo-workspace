@@ -4,6 +4,27 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { IconSun, IconMoon } from '@tabler/icons-react';
 
+/**
+ * The nav items are homepage section anchors (`/#guides` …). From a sub-page
+ * those bounce you back to the homepage, which is jarring once a real section
+ * page exists — so on `/guides/*` the "guides" item targets the guides index
+ * instead. Re-read on every `astro:page-load` because this island is persisted
+ * across view-transition navigations and its props never change.
+ */
+function useGuidesHref() {
+  const [href, setHref] = useState('/#guides');
+  useEffect(() => {
+    const sync = () => {
+      const path = window.location.pathname;
+      setHref(path === '/guides' || path.startsWith('/guides/') ? '/guides' : '/#guides');
+    };
+    sync();
+    document.addEventListener('astro:page-load', sync);
+    return () => document.removeEventListener('astro:page-load', sync);
+  }, []);
+  return href;
+}
+
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
@@ -30,6 +51,8 @@ function ThemeToggle() {
 }
 
 export default function Nav() {
+  const guidesHref = useGuidesHref();
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -12 }}
@@ -45,7 +68,7 @@ export default function Nav() {
           writing
         </a>
         <a
-          href="/#guides"
+          href={guidesHref}
           className="text-zinc-600 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors duration-200"
         >
           guides

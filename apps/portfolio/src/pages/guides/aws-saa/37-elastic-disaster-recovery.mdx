@@ -1,0 +1,88 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Elastic Disaster Recovery"
+description: "Continuous block-level replication of whole servers into a low-cost staging area, ready to boot as EC2 within minutes of a disaster."
+domain: "Storage"
+order: 37
+date: "Sep 6, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsElasticDisasterRecovery, AmazonEc2 } from "@aws-icons/react/architecture-service";
+import { CorporateDataCenter } from "@aws-icons/react/architecture-group";
+
+export const drsIcon = awsIconDataUri(AwsElasticDisasterRecovery);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const dcIcon = awsIconDataUri(CorporateDataCenter);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Traditional DR means running a full standby copy of your infrastructure elsewhere — expensive — or restoring from backups and losing hours of data. **AWS Elastic Disaster Recovery (AWS DRS)** takes the middle path: an agent on each source server does **continuous, block-level replication** into a **cheap staging area** in your AWS account (low-cost storage + tiny replication instances). On disaster, DRS **converts and boots** those volumes as full-size EC2 instances in **minutes**, giving sub-second RPO and minutes-scale RTO without paying for idle standby compute.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- DRS replicates into a **staging area subnet in one target Region** (and AZ) of your choosing. Recovery launches instances into your production VPC/subnets in that Region.
+- Sources can be **on-premises physical/virtual servers, other clouds, or EC2 in another Region/AZ** (for AWS-to-AWS DR).
+- It supports **cross-Region** and **cross-AZ** DR for existing AWS workloads; failback replicates changes back to the origin when the primary site recovers.
+
+<Mermaid
+  chart={`graph LR
+  subgraph SRC["Source Site (on-prem / other cloud / another Region)"]
+    S1["Server: app"]
+    S2["Server: db"]
+  end
+  S1 -->|"DRS agent: continuous block replication"| REP
+  S2 -->|"DRS agent: continuous block replication"| REP
+  subgraph STAGE["Staging Area (target Region, low cost)"]
+    REP["Replication servers + EBS staging volumes"]
+  end
+  REP -.->|"drill / disaster: convert + boot"| REC
+  subgraph PROD["Recovery in target Region (only running during DR)"]
+    REC["Full-size EC2 instances"]
+  end
+  REC -.->|"failback when primary recovers"| SRC
+  classDef src fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef stage fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef prod fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class S1,S2 src
+  class REP stage
+  class REC prod`}
+  clusterColors={{
+    SRC: { stroke: "#3b82f6", dashed: true },
+    STAGE: { stroke: "#2e8b3d" },
+    PROD: { stroke: "#8b3de0", dashed: true },
+  }}
+  nodeIcons={{
+    SRC: [dcIcon],
+    REP: [drsIcon],
+    REC: [ec2Icon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+The whole point is a **cheap steady state**: you pay for **low-cost staging EBS volumes**, small **replication server instances** (one per ~15 source disks), a modest **per-source-server hourly DRS fee**, and **data transfer** for replication. You only pay for **full-size EC2 + full EBS** during **drills** and **actual failover**. This "pilot light" economics is the exam selling point versus a hot standby.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "lowest cost DR with fast recovery", "RPO of seconds, RTO of minutes", "don't want to pay for idle standby servers", "DR for on-premises or non-AWS servers into AWS" → **AWS Elastic Disaster Recovery**.
+- DRS is the **successor to CloudEndure Disaster Recovery**. If you see CloudEndure DR in an answer, DRS is the modern equivalent.
+- **AWS DRS (disaster recovery) vs AWS Application Migration Service / MGN (one-time migration)** — same underlying replication tech, different lifecycle: DRS keeps replicating and supports failback; MGN cuts over once.
+- Run **non-disruptive recovery drills** regularly — launching drill instances in an isolated subnet doesn't affect the source or ongoing replication. The exam likes "how do you test DR without impacting production".
+- Maps to the **"pilot light" / "warm standby" DR strategies** — cheaper than multi-site active/active, faster than backup-and-restore.
+- For **database-only** DR, native options (RDS cross-Region read replicas, Aurora Global Database, DynamoDB global tables) are usually preferred; DRS shines for **whole-server** and **heterogeneous** estates.

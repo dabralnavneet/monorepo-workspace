@@ -1,0 +1,74 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Instance Store"
+description: "Physically-attached ephemeral disks — the fastest storage EC2 offers, and the first thing you lose when the instance stops."
+domain: "Storage"
+order: 26
+date: "Sep 6, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2, AmazonElasticBlockStore } from "@aws-icons/react/architecture-service";
+
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const ebsIcon = awsIconDataUri(AmazonElasticBlockStore);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Some workloads — caches, scratch space, buffers, replicated NoSQL nodes — need the **lowest possible disk latency** and don't care if the data disappears. **Instance Store** volumes are disks **physically attached to the host machine** running your instance. Because there's no network hop (unlike EBS), they deliver very high IOPS and throughput. The trade-off is total: the data is **ephemeral** and tied to the life of that specific instance.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An instance store is **bound to the physical host**, which is far tighter than AZ scope — you cannot detach it, and you cannot reattach it to another instance.
+- Data survives a **reboot** (the instance stays on the same host) but is **lost on stop, hibernate, or termination**, and on any **underlying hardware failure** that moves the instance.
+- Only specific instance families include instance store volumes (e.g. `i`, `d`, `im4gn`, and the `NVMe SSD` variants of general-purpose families). Many modern instance types are **EBS-only**.
+
+<Mermaid
+  chart={`graph TD
+  subgraph HOST["Physical Host"]
+    EC2["EC2 Instance"]
+    IS["Instance Store (NVMe SSD)"]
+    EC2 -->|"local bus, no network hop"| IS
+  end
+  EBSVOL["EBS Volume"] -.->|"network-attached, over the AZ fabric"| EC2
+  REBOOT(("Reboot")) -->|"same host, data kept"| IS
+  STOP(("Stop / Terminate / HW failure")) -->|"data lost"| GONE(("Data gone"))
+  classDef ephemeral fill:#fdecec,stroke:#d64545,stroke-width:2px,color:#5c1a1a
+  classDef durable fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class IS,GONE ephemeral
+  class EBSVOL durable`}
+  clusterColors={{
+    HOST: { stroke: "#e0842e" },
+  }}
+  nodeIcons={{
+    EC2: [ec2Icon],
+    EBSVOL: [ebsIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+There is **no separate charge** for instance store — its capacity is baked into the **hourly price of the instance type** that includes it. You can't provision it, resize it, or turn it off independently. This makes storage-heavy instance families look expensive per hour, but the local storage is effectively "free" bandwidth-wise since it never touches the network.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "high IOPS at lowest latency", "temporary / scratch / buffer / cache data", "data can be regenerated" → instance store. "Data must persist", "survive a stop" → EBS.
+- Instance store **cannot be a boot volume for a stoppable instance** in the way EBS can — EBS-backed AMIs are the norm precisely because you can stop/start them.
+- You **can't take a snapshot** of an instance store volume. Durability is your application's job (e.g. Cassandra/Kafka replicating across nodes).
+- Rebooting is safe; **stopping is not**. This is a favourite exam trap — "user stopped the instance to save money and lost the data."
+- If a question needs both raw speed _and_ durability, the answer is usually **instance store for the hot working set + asynchronous persistence to EBS or S3**.

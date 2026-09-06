@@ -137,7 +137,9 @@ const TopicIcon = awsTopicIcons[frontmatter.order];
   }
   .prose-dark ul,
   .prose-dark ol {
-    padding-left: 1.5rem;
+    /* Markers are off (Tailwind preflight), so no indent is needed — list text
+       lines up flush with the paragraphs. */
+    padding-left: 0;
     margin-bottom: 1.75rem;
     color: #52525b;
   }

@@ -8,9 +8,25 @@ import {
   AwsBackup,
   AwsElasticDisasterRecovery,
   AwsStorageGateway,
+  AmazonEc2,
+  AmazonEc2ImageBuilder,
+  AwsElasticBeanstalk,
+  AmazonLightsail,
+  AmazonElasticContainerService,
+  AmazonElasticKubernetesService,
+  AmazonElasticContainerRegistry,
+  AwsAppRunner,
+  AwsBatch,
+  AwsLambda,
+  AwsServerlessApplicationRepository,
+  AwsAmplify,
+  AwsOutpostsRack,
+  AmazonEcsAnywhere,
+  AmazonElasticVmwareService,
+  AwsSnowball,
 } from '@aws-icons/react/architecture-service';
 import { PublicSubnet } from '@aws-icons/react/architecture-group';
-import { Firewall } from '@aws-icons/react/resource';
+import { Firewall, AmazonVpcElasticNetworkInterface } from '@aws-icons/react/resource';
 
 // Maps a curriculum topic's `order` to its official AWS Architecture Icon, when one exists.
 export const awsTopicIcons: Record<number, AwsIconComponent> = {
@@ -30,4 +46,21 @@ export const awsTopicIcons: Record<number, AwsIconComponent> = {
   36: AwsBackup,
   37: AwsElasticDisasterRecovery,
   38: AwsStorageGateway,
+  39: AmazonEc2,
+  40: AmazonEc2ImageBuilder,
+  41: AmazonVpcElasticNetworkInterface,
+  42: AwsElasticBeanstalk,
+  43: AmazonLightsail,
+  44: AmazonElasticContainerService,
+  45: AmazonElasticKubernetesService,
+  46: AmazonElasticContainerRegistry,
+  47: AwsAppRunner,
+  48: AwsBatch,
+  49: AwsLambda,
+  50: AwsServerlessApplicationRepository,
+  51: AwsAmplify,
+  52: AwsOutpostsRack,
+  53: AmazonEcsAnywhere,
+  54: AmazonElasticVmwareService,
+  55: AwsSnowball,
 };

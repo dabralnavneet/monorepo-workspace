@@ -1,0 +1,82 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Outposts"
+description: "AWS-owned racks and servers installed in your data center — the same EC2, EBS, and APIs, running on-premises with a link back to a home Region."
+domain: "Compute"
+order: 52
+date: "Sep 9, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsOutpostsRack } from "@aws-icons/react/architecture-service";
+import { CorporateDataCenter, AwsCloud } from "@aws-icons/react/architecture-group";
+
+export const outpostIcon = awsIconDataUri(AwsOutpostsRack);
+export const dcIcon = awsIconDataUri(CorporateDataCenter);
+export const cloudIcon = awsIconDataUri(AwsCloud);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Some workloads must stay physically on-premises — for **single-digit-millisecond latency** to factory equipment or trading systems, **data-residency** rules, or local processing that can't depend on a WAN link — yet the team wants **the AWS control plane, APIs, and services**, not a separate on-prem stack. **AWS Outposts** delivers that: AWS ships, installs, and fully manages **its own hardware** (a 42U **rack**, or smaller 1U/2U **servers**) in your facility. It's an extension of an AWS **Region**: you launch **EC2, EBS, ECS, EKS, S3 on Outposts, RDS, and more** on the local capacity through the normal console/API/CloudFormation.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An Outpost is **anchored to one AWS Region** (its "home Region") and appears in your account like an **extension of one AZ**. It is **not** multi-AZ on its own — for local HA you deploy **multiple Outposts**.
+- It needs a reliable **Service Link** (network path) back to the home Region for control-plane operations, monitoring, and updates; the **local gateway** carries data-plane traffic to your on-prem network.
+- If the link to the Region drops, **already-running instances keep running**, but you can't launch new ones or make API changes until it recovers.
+
+<Mermaid
+  chart={`graph LR
+  subgraph REGION["AWS Region (home)"]
+    CP["AWS control plane / console / APIs"]
+  end
+  CP <-->|"Service Link (VPN over your network)"| OP
+  subgraph DC["Your Data Center"]
+    subgraph OP["AWS Outpost (AWS-owned, AWS-managed)"]
+      EC2["EC2 + EBS"]
+      CON["ECS / EKS"]
+      S3O["S3 on Outposts"]
+      RDSO["RDS on Outposts"]
+    end
+    LGW["Local Gateway"] --> ONPREM["On-prem apps / OT equipment"]
+    OP --> LGW
+  end
+  classDef op fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef region fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class EC2,CON,S3O,RDSO op
+  class CP region`}
+  clusterColors={{
+    REGION: { stroke: "#2e8b3d" },
+    DC: { stroke: "#3b82f6", dashed: true },
+    OP: { stroke: "#8b3de0" },
+  }}
+  nodeIcons={{ OP: [outpostIcon], DC: [dcIcon], REGION: [cloudIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You **pay for the Outpost capacity up front or monthly** over a **3-year term** (all-upfront, partial, or no-upfront), covering the hardware, delivery, installation, and maintenance — you're effectively reserving a fixed pool of compute and storage. Services that reach back to the Region (data transfer to/from the home Region, S3 in-Region, etc.) bill normally. There's **no per-instance On-Demand rate** for capacity that's already on the Outpost — you sized and paid for it.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "must run on-premises," "very low latency to local systems," "data residency / cannot leave the building," "but wants native AWS services and APIs" → **Outposts**.
+- **Outposts vs Local Zones vs Wavelength**: Local Zones and Wavelength are **AWS-operated** sites near cities / in telco 5G networks — you don't host anything. Outposts is hardware **in your own facility**.
+- **Outposts vs Snow Family**: Snow is for **temporary / disconnected / edge / data-transfer** use and ships back; Outposts is a **permanent, connected** extension of a Region.
+- **Not inherently highly available** — one Outpost is like part of one AZ. Design HA with multiple Outposts or by failing back to the Region.
+- Supports **EC2, EBS, ECS, EKS, S3 on Outposts, RDS, ElastiCache, EMR**, and Application Load Balancer locally; the exact service list is smaller than a full Region.
+- Fully **AWS-owned and AWS-maintained** — your staff never patches or replaces the hardware.

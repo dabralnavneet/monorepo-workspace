@@ -1,0 +1,80 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "EKS"
+description: "Managed upstream Kubernetes — AWS runs the control plane across AZs, you bring nodes (or Fargate) and standard k8s tooling."
+domain: "Compute"
+order: 45
+date: "Sep 9, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonElasticKubernetesService, AwsFargate, AmazonEc2 } from "@aws-icons/react/architecture-service";
+
+export const eksIcon = awsIconDataUri(AmazonElasticKubernetesService);
+export const fargateIcon = awsIconDataUri(AwsFargate);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Kubernetes is the portable standard for container orchestration, but running the **control plane** yourself — a highly available, upgraded, patched, etcd-backed API server — is a full-time job. **Amazon EKS (Elastic Kubernetes Service)** runs a **conformant upstream Kubernetes control plane** for you, spread across three AZs, and gives you a normal cluster endpoint. You use standard `kubectl`, Helm, and ecosystem operators; AWS handles control-plane availability and version upgrades. Pick EKS over ECS when you need **Kubernetes portability, the CNCF ecosystem, or an existing k8s investment**.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- The **control plane is Regional and multi-AZ** by design — AWS runs API servers and etcd across **3 AZs** and replaces unhealthy components automatically.
+- The **data plane** (worker nodes) is yours to spread: **Managed Node Groups** (EC2 Auto Scaling groups AWS lifecycle-manages), **self-managed nodes**, or **Fargate** (one micro-VM per pod, no nodes). Put node groups in **multiple AZs** for HA.
+- **EKS Anywhere** and **EKS on Outposts** run the same distribution on your own hardware (covered separately).
+
+<Mermaid
+  chart={`graph TD
+  subgraph CP["EKS Control Plane (AWS-managed, 3 AZs)"]
+    API["Kubernetes API server"]
+    ETCD["etcd"]
+  end
+  KUBECTL(("kubectl / Helm / CI")) --> API
+  API --> DP
+  subgraph DP["Data plane (your VPC)"]
+    subgraph MNG["Managed Node Group"]
+      N1["EC2 node (AZ-a)"]
+      N2["EC2 node (AZ-b)"]
+    end
+    FG["Fargate profile (1 microVM per pod)"]
+  end
+  classDef cp fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef node fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class API,ETCD cp
+  class N1,N2 node`}
+  clusterColors={{
+    CP: { stroke: "#8b3de0" },
+    DP: { stroke: "#2e8b3d" },
+    MNG: { stroke: "#3b82f6", dashed: true },
+  }}
+  nodeIcons={{ API: [eksIcon], N1: [ec2Icon], N2: [ec2Icon], FG: [fargateIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+EKS charges a **flat hourly fee per cluster** for the managed control plane (about $0.10/hr, more for extended-support Kubernetes versions), **on top of** the data-plane cost: EC2 + EBS for node groups, or per-pod vCPU/GB-seconds for Fargate, plus the ALB/NLB, data transfer, and any add-ons. Because the control-plane fee is per-cluster, **many small clusters cost more** than fewer larger ones with namespace isolation.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **EKS vs ECS**: choose EKS for "must use Kubernetes," "portability across clouds/on-prem," "existing Helm charts / k8s operators," or a platform team that already knows k8s. Choose ECS for a simpler AWS-native model with less operational surface.
+- **Fargate on EKS** removes node management but doesn't support DaemonSets, privileged pods, GPUs, or stateful workloads needing certain volume types — know the limits.
+- Networking uses the **VPC CNI**: every pod gets a real VPC IP, so subnet sizing matters. **IRSA** (IAM Roles for Service Accounts) / **EKS Pod Identity** give pods scoped AWS permissions.
+- **Managed Node Groups** handle graceful node drain on upgrade; **Cluster Autoscaler** or **Karpenter** scales node count to pending pods.
+- Ingress via the **AWS Load Balancer Controller** (provisions ALB/NLB from `Ingress`/`Service` objects); storage via the **EBS** and **EFS CSI drivers**.
+- Control-plane HA across 3 AZs is automatic — you don't design it, but you **do** design node groups across AZs.

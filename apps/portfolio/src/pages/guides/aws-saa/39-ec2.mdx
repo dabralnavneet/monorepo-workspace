@@ -1,0 +1,99 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "EC2"
+description: "Resizable virtual servers you rent by the second — the compute primitive most of AWS is built on top of."
+domain: "Compute"
+order: 39
+date: "Sep 9, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2, AmazonElasticBlockStore } from "@aws-icons/react/architecture-service";
+import { PublicSubnet } from "@aws-icons/react/architecture-group";
+
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const ebsIcon = awsIconDataUri(AmazonElasticBlockStore);
+export const subnetIcon = awsIconDataUri(PublicSubnet);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Buying, racking, and depreciating physical servers is slow and capital-intensive, and you always guess capacity wrong. **Amazon EC2 (Elastic Compute Cloud)** replaces that with **virtual machines you launch in minutes and pay for by the second**: pick an OS image (AMI), a size (instance type), a network (VPC subnet), and storage (EBS), and you have a server. Stop it when you don't need it, resize it when the workload changes, launch a hundred more behind a load balancer when traffic spikes.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An EC2 instance runs in **one subnet**, which pins it to a **single Availability Zone**. It cannot span AZs — high availability means running instances in **multiple AZs** behind a load balancer or Auto Scaling group.
+- **AMIs**, **key pairs**, **security groups**, and **Elastic IPs** are **Regional** — an AMI must be **copied** to another Region before you can launch from it there.
+- **Instance types**, pricing, and capacity vary by Region and AZ; some newer instance families aren't available everywhere.
+
+<Mermaid
+  chart={`graph TD
+  subgraph REGION["AWS Region"]
+    AMI["AMI (OS + config template)"]
+    subgraph AZ["Availability Zone A"]
+      subgraph SUB["Subnet"]
+        EC2["EC2 Instance (t3.large)"]
+      end
+      EBS["EBS Root Volume"]
+      EC2 -->|"boots from"| EBS
+    end
+    AMI -->|"launch"| EC2
+    SG["Security Group (instance firewall)"] -.->|"controls traffic"| EC2
+  end
+  classDef inst fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef tmpl fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class EC2 inst
+  class AMI tmpl`}
+  clusterColors={{
+    REGION: { stroke: "#2e8b3d" },
+    AZ: { stroke: "#3b82f6", dashed: true },
+    SUB: { stroke: "#2e8b3d" },
+  }}
+  nodeIcons={{
+    EC2: [ec2Icon],
+    EBS: [ebsIcon],
+    SUB: [subnetIcon],
+  }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:layers-triple-outline" width={22} height={22} />
+  <h2 class="!m-0">Instance Families & Purchasing</h2>
+</div>
+
+| Family | Optimized for | Typical use |
+| --- | --- | --- |
+| **General purpose** (t, m) | Balanced CPU/memory | Web servers, small DBs, dev boxes |
+| **Compute optimized** (c) | High CPU per dollar | Batch, gaming servers, media transcoding, HPC |
+| **Memory optimized** (r, x, z) | Large RAM | In-memory caches, big relational/NoSQL DBs |
+| **Storage optimized** (i, d) | High local disk IOPS/throughput | Data warehouses, distributed file systems |
+| **Accelerated** (p, g, inf) | GPU / ML accelerators | Training, inference, rendering |
+
+**Purchasing options**: **On-Demand** (pay per second, no commitment), **Reserved / Savings Plans** (1–3 yr commitment, up to ~72% off), **Spot** (spare capacity, up to ~90% off but can be reclaimed with a 2-minute warning), **Dedicated Hosts / Instances** (physical isolation, BYOL licensing), **Capacity Reservations** (guarantee capacity in an AZ).
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay a **per-second rate for the instance while it's running** (minimum 60 seconds), plus **EBS storage** for its volumes even while **stopped**, plus **data transfer out** and any Elastic IP that isn't attached to a running instance. A **stopped** instance costs nothing for compute; a **terminated** one costs nothing at all (and its non-persistent volumes are gone). Right-sizing, Spot for interruptible work, and Savings Plans for steady baseline load are the three big levers.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Stop vs terminate vs hibernate**: stop keeps EBS volumes (you still pay for them); terminate deletes the instance and any "delete on termination" volumes; hibernate writes RAM to the root EBS volume so the instance resumes where it left off.
+- **Spot** for "fault-tolerant, flexible, stateless, or checkpointed" workloads and "lowest cost." **Reserved/Savings Plans** for "steady-state, predictable, always-on." **On-Demand** for "short-term, spiky, can't be interrupted."
+- **User data** runs once at first boot (bootstrapping); **instance metadata** (IMDSv2) exposes instance details and IAM role credentials at `169.254.169.254`.
+- Attach an **IAM role** to an instance rather than storing access keys on it — the SDK/CLI picks up temporary credentials automatically.
+- **Placement groups**: *cluster* (low-latency, same rack — HPC), *spread* (each instance on distinct hardware — critical small fleets), *partition* (isolated partitions — large distributed systems like Hadoop/Kafka).
+- **Enhanced networking / ENA / EFA** for high packet-per-second and HPC MPI workloads; **Nitro** instances are the modern default.

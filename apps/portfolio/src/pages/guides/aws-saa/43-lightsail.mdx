@@ -1,0 +1,68 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Lightsail"
+description: "A simplified, fixed-price corner of AWS — bundled compute, storage, and networking for people who don't want to think about EC2."
+domain: "Compute"
+order: 43
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonLightsail, AmazonEc2 } from "@aws-icons/react/architecture-service";
+
+export const lsIcon = awsIconDataUri(AmazonLightsail);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+The full EC2/VPC/IAM surface is overwhelming if you just want to host a WordPress blog, a small Node app, or a dev box, and On-Demand pricing makes the monthly bill hard to predict. **Amazon Lightsail** is a **simplified experience with predictable, bundled monthly pricing**: each plan includes a virtual server, SSD storage, a fixed data-transfer allowance, a static IP, and DNS management, with one-click blueprints (WordPress, LAMP, Node, containers) and a stripped-down console. It's AWS for the "I don't want to learn AWS yet" case — with a clean **upgrade path to EC2** when you outgrow it.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Lightsail resources are created in a **Region and an AZ**, like EC2, but the AZ choice is mostly hidden. A Lightsail **load balancer** distributes across instances you attach.
+- Lightsail runs in its **own managed VPC**, separate from your default VPC. **VPC peering** (one click) connects it to your main AWS VPC so Lightsail instances can reach RDS, etc.
+- **Container services**, **managed databases**, **CDN distributions**, and **object storage** are all available as the same fixed-price bundles.
+
+<Mermaid
+  chart={`graph LR
+  PLAN["Lightsail plan ($/month, fixed)"] --> BUNDLE
+  subgraph BUNDLE["Everything included"]
+    VM["Virtual server (vCPU + RAM)"]
+    DISK["SSD storage"]
+    XFER["Data transfer allowance"]
+    IP["Static IP + DNS"]
+  end
+  BUNDLE -.->|"outgrow it"| EC2["Export snapshot -> EC2 / full VPC"]
+  classDef plan fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  classDef grow fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class PLAN plan
+  class EC2 grow`}
+  nodeIcons={{ PLAN: [lsIcon], EC2: [ec2Icon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+A **flat monthly price per plan**, billed hourly up to the monthly cap, that bundles compute, storage, and a generous **data-transfer allowance** (overage is billed at normal rates). This predictability is the whole point — no separate line items for EBS, Elastic IP, or the first N GB of transfer. It's often **cheaper than the equivalent EC2 + EBS + ELB** at the low end, and more expensive / less flexible at scale.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "simple," "predictable monthly cost," "small website / blog / dev environment," "user has little AWS experience," "get started quickly" → **Lightsail**.
+- Lightsail is **not** the answer when the question needs fine-grained IAM, Auto Scaling policies, multiple instance types, custom VPC design, or high scale — that's **EC2**.
+- You can **peer the Lightsail VPC with your account VPC** to let Lightsail talk to RDS/other private services.
+- Migration path: take a **Lightsail snapshot**, export it to **EC2** as an AMI/EBS snapshot when you need the full platform.
+- Lightsail includes managed **databases**, **load balancers with free certificates**, **CDN distributions**, and a **containers** service — all at bundled prices.

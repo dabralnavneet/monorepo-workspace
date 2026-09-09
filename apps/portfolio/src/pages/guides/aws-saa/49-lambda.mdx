@@ -1,0 +1,67 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Lambda"
+description: "Run a function in response to an event, pay only for the milliseconds it executes, and never think about a server."
+domain: "Compute"
+order: 49
+date: "Sep 9, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsLambda } from "@aws-icons/react/architecture-service";
+
+export const lambdaIcon = awsIconDataUri(AwsLambda);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+For glue code, event handlers, and spiky APIs, running a 24/7 server is wasteful: you pay for idle time and you own patching, scaling, and availability for something that runs for milliseconds at a time. **AWS Lambda** flips it: you upload a **function**, wire it to an **event source**, and AWS runs it **on demand** — spinning up execution environments as invocations arrive, running them in parallel, and charging you only for **GB-seconds of actual execution** plus a tiny per-request fee. No instances, no capacity planning, scales from zero to thousands of concurrent executions automatically.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A function is a **Regional** resource; AWS runs its execution environments across **multiple AZs** automatically — you don't design HA for the compute.
+- By default a function runs in an **AWS-managed network** with internet access. Attach it to **your VPC** (subnets in ≥2 AZs) to reach private resources like RDS; outbound internet then needs a **NAT Gateway** or VPC endpoints.
+- **Lambda@Edge** and **CloudFront Functions** run logic at edge locations globally (covered in Networking); everything else is Regional.
+
+<Mermaid
+  chart={`graph LR
+  API["API Gateway / Function URL"] --> FN
+  S3E["S3 event"] --> FN
+  SQS["SQS / Kinesis / DynamoDB Streams"] -->|"poll (batch)"| FN
+  EB["EventBridge (schedule / rule)"] --> FN
+  FN["Lambda function (runtime, up to 15 min, up to 10 GB RAM)"]
+  FN --> DDB["DynamoDB"]
+  FN --> S3O["S3"]
+  FN -.->|"in-VPC"| RDS["RDS (via ENI)"]
+  classDef fn fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class FN fn`}
+  nodeIcons={{ FN: [lambdaIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+Two components: **number of requests** and **GB-seconds** = (memory allocated) × (duration, billed per ms). More memory also means more CPU, so a function can get **cheaper** by finishing faster at a higher memory setting — worth tuning. Idle costs nothing. Add-ons that bill separately: **Provisioned Concurrency** (kept-warm environments), **ephemeral `/tmp` above 512 MB**, data transfer, and whatever downstream services the function calls. There's an always-free monthly tier.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Hard limits**: **15-minute** max timeout, **10 GB** max memory, **/tmp** 512 MB–10 GB, deployment package 50 MB zipped / 250 MB unzipped (or a **10 GB container image**). Over these → ECS/Fargate or Batch.
+- **Invocation models**: *synchronous* (API Gateway, ALB — caller waits), *asynchronous* (S3, SNS, EventBridge — internal retries twice, then DLQ / on-failure destination), *poll-based / event source mapping* (SQS, Kinesis, DynamoDB Streams, Kafka — Lambda polls and batches).
+- **Cold starts**: first invocation of a new environment pays init time; mitigate with **Provisioned Concurrency** (or SnapStart for Java). VPC-attached functions no longer have a big cold-start penalty (Hyperplane ENIs).
+- **Concurrency**: default 1,000 per account/Region (soft limit). Use **reserved concurrency** to cap a function; **provisioned concurrency** to pre-warm it.
+- **Put an RDS Proxy in front of RDS** for Lambda to avoid exhausting DB connections at high concurrency.
+- **Lambda vs Fargate/App Runner**: Lambda for event-driven, bursty, short tasks and true pay-per-use; containers for long-running processes, big workloads, or non-HTTP long connections.
+- **Layers** share common code/deps across functions; **aliases + versions** enable canary/weighted traffic shifting (often via CodeDeploy).

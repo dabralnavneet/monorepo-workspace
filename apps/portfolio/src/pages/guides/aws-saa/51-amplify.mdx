@@ -1,0 +1,73 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Amplify"
+description: "A hosting-plus-backend platform for web and mobile front ends — git-based CI/CD, a global CDN, and managed auth, data, and storage."
+domain: "Compute"
+order: 51
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsAmplify } from "@aws-icons/react/architecture-service";
+
+export const amplifyIcon = awsIconDataUri(AwsAmplify);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Front-end teams shipping a React / Vue / Next.js / mobile app need hosting with a build pipeline and a CDN, plus a backend for **auth, an API, a database, and file uploads** — and they don't want to hand-assemble Cognito + AppSync + DynamoDB + S3 + CloudFront + a CI job. **AWS Amplify** packages that: **Amplify Hosting** connects to your git repo and does build → deploy → global CDN with **per-branch environments and pull-request previews**; **Amplify's backend tooling** provisions Cognito (auth), AppSync/API Gateway (data & APIs), and S3 (storage) from a config, with client libraries that wire the front end to them.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- **Hosting** serves your app from a **global CloudFront distribution** (edge locations worldwide); the build pipeline and the backend resources run in a **Region** you pick.
+- Backend resources (Cognito user pools, AppSync APIs, DynamoDB tables, S3 buckets) are **Regional** and carry their own multi-AZ durability — Amplify just provisions and connects them.
+- Each git branch can map to its own **environment** (dev / staging / prod), each with an isolated backend stack.
+
+<Mermaid
+  chart={`graph LR
+  REPO["Git repo (push / open PR)"] --> HOST
+  subgraph HOST["Amplify Hosting"]
+    BUILD["Build + deploy"]
+    CDN["Global CDN (CloudFront)"]
+    PREV["PR preview environments"]
+    BUILD --> CDN
+  end
+  CDN --> USERS(("Users"))
+  HOST -.-> BE
+  subgraph BE["Amplify backend (Regional)"]
+    AUTH["Auth - Cognito"]
+    DATA["Data / API - AppSync + DynamoDB"]
+    STORE["Storage - S3"]
+  end
+  classDef host fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef be fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class BUILD,CDN host
+  class AUTH,DATA,STORE be`}
+  nodeIcons={{ BUILD: [amplifyIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+**Hosting** bills for **build minutes**, **data stored**, and **data served** from the CDN. The **backend** is just the underlying services at their normal rates — Cognito MAUs, AppSync requests, DynamoDB, S3. There's no Amplify "platform fee" beyond hosting; a small app with modest traffic lands in or near the free tier, and cost scales with build frequency and CDN egress.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "host a web / mobile front end with CI/CD and a CDN," "quickly add auth, a GraphQL/REST API, and file storage to an app," "pull-request preview environments," "full-stack app with minimal backend work" → **Amplify**.
+- **Amplify Hosting vs S3 + CloudFront**: Amplify adds the **git-triggered build pipeline, branch environments, PR previews, redirects/rewrites, and SSR support** on top; plain S3+CloudFront is just static hosting you deploy to yourself.
+- **Amplify vs App Runner / Elastic Beanstalk**: Amplify targets **front-end apps + a managed serverless backend**; App Runner/Beanstalk target **server-side application containers/code**.
+- Backend is **Cognito + AppSync + DynamoDB + S3** under the hood — if a question describes those being set up together for a mobile app, Amplify is the packaging.
+- Custom domains get an **AWS-managed TLS certificate** automatically.

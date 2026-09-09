@@ -1,0 +1,65 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "App Runner"
+description: "Point it at a container image or a code repo and it builds, deploys, load-balances, scales to zero, and gives you an HTTPS URL."
+domain: "Compute"
+order: 47
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsAppRunner, AmazonElasticContainerRegistry } from "@aws-icons/react/architecture-service";
+
+export const arIcon = awsIconDataUri(AwsAppRunner);
+export const ecrIcon = awsIconDataUri(AmazonElasticContainerRegistry);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+You have a web service in a container (or a supported source repo) and you want it online — with HTTPS, a load balancer, autoscaling, health checks, and rolling deploys — **without touching ECS, Fargate task definitions, ALBs, or VPC wiring**. **AWS App Runner** is that: connect an **ECR image** or a **GitHub/Bitbucket repo**, set the port and a few env vars, and App Runner builds it (for source repos), runs it on managed compute, fronts it with a load balancer and a TLS endpoint, **autoscales on concurrent requests**, and redeploys automatically when the image or branch changes.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An App Runner **service** is **Regional**; AWS runs its instances across **multiple AZs** transparently — you don't pick subnets or AZs for the service itself.
+- By default the service reaches the internet for outbound calls. A **VPC connector** attaches outbound traffic to **your VPC subnets/AZs** so it can reach RDS, ElastiCache, or internal services privately.
+- The public endpoint is a stable **`*.awsapprunner.com`** URL; add a **custom domain** with an AWS-managed certificate.
+
+<Mermaid
+  chart={`graph LR
+  SRC1["ECR image"] --> AR
+  SRC2["Source repo (GitHub / Bitbucket)"] -->|"App Runner builds"| AR
+  subgraph AR_BOX["App Runner service (managed, multi-AZ)"]
+    AR["Build - deploy - TLS - load balance - autoscale (to zero)"]
+  end
+  AR -->|"HTTPS *.awsapprunner.com"| USERS(("Users"))
+  AR -.->|"VPC connector"| VPC["Your VPC (RDS, cache, internal APIs)"]
+  classDef ar fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class AR ar`}
+  nodeIcons={{ SRC1: [ecrIcon], AR: [arIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay for **provisioned memory** whenever an instance exists (kept warm), and **compute (vCPU) only while requests are being served** — when idle, App Runner scales the active instances down (optionally to zero warm-but-not-billed-for-CPU), so a low-traffic service is cheap. Source-based deploys add a small **build fee**. There's no ALB line item — it's bundled. More expensive per unit than raw Fargate at steady high load, cheaper in ops time and for spiky traffic.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "deploy a containerized web app / API with the least operational overhead," "automatic HTTPS and scaling," "don't want to manage load balancers or clusters," "scale to zero between requests."
+- **App Runner vs Fargate/ECS**: App Runner is opinionated and hands-off (HTTP request/response services only); ECS/EKS give you networking, sidecars, non-HTTP protocols, and fine-grained control.
+- **App Runner vs Lambda**: Lambda for event-driven, very spiky, sub-second tasks and pay-per-invocation; App Runner for always-available HTTP services that want a container and a persistent process model.
+- Needs a **VPC connector** to reach private resources — by default it can't see your VPC.
+- Supports **automatic deployments** on ECR push or repo commit, plus **manual** deployments; health check path is configurable.

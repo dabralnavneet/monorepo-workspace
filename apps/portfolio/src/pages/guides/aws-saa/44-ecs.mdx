@@ -1,0 +1,80 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "ECS"
+description: "AWS's own container orchestrator — run tasks and long-lived services on EC2 you manage or on Fargate you don't."
+domain: "Compute"
+order: 44
+date: "Sep 9, 2026"
+readTime: "7 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonElasticContainerService, AwsFargate, AmazonEc2 } from "@aws-icons/react/architecture-service";
+import { AmazonElasticContainerServiceTask } from "@aws-icons/react/resource";
+
+export const ecsIcon = awsIconDataUri(AmazonElasticContainerService);
+export const fargateIcon = awsIconDataUri(AwsFargate);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const taskIcon = awsIconDataUri(AmazonElasticContainerServiceTask);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Running containers in production means scheduling them onto hosts, restarting the ones that die, rolling out new versions without downtime, wiring them to a load balancer, and scaling them with load. **Amazon ECS (Elastic Container Service)** is AWS's managed orchestrator for that: you describe a container in a **task definition**, run it as a one-off **task** or a long-lived **service** with a desired count, and ECS places it, health-checks it, registers it with an ALB target group, and replaces it on failure — on **EC2 capacity you own** or on **Fargate**, where there are no hosts to see at all.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An ECS **cluster** is **Regional**; a **service** spreads its tasks across the **subnets/AZs** you give it, and the ALB in front does the same, so a service can survive an AZ failure.
+- **EC2 launch type**: you run and patch a fleet of container-instances (across AZs) that the ECS agent registers with the cluster. **Fargate launch type**: AWS runs the compute; you only pick CPU/memory and subnets.
+- **Task definitions**, **ECR images**, and **IAM task roles** are Regional; images must be in an ECR repo (or public registry) reachable from the task's subnet.
+
+<Mermaid
+  chart={`graph TD
+  TD["Task Definition (image, CPU/mem, ports, IAM role)"] --> SVC["ECS Service (desired count = 3)"]
+  SVC --> SCHED["ECS Scheduler + placement"]
+  ALB["Application Load Balancer"] --> SVC
+  subgraph CLUSTER["ECS Cluster (Regional)"]
+    subgraph LT["Capacity"]
+      FG["Fargate (no hosts)"]
+      EC2H["EC2 container instances"]
+    end
+    SCHED --> T1["Task (AZ-a)"]
+    SCHED --> T2["Task (AZ-b)"]
+    SCHED --> T3["Task (AZ-c)"]
+  end
+  classDef svc fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef task fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class SVC svc
+  class T1,T2,T3 task`}
+  clusterColors={{
+    CLUSTER: { stroke: "#2e8b3d" },
+    LT: { stroke: "#3b82f6", dashed: true },
+  }}
+  nodeIcons={{ SVC: [ecsIcon], FG: [fargateIcon], EC2H: [ec2Icon], T1: [taskIcon], T2: [taskIcon], T3: [taskIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+**ECS the control plane is free.** With the **EC2 launch type** you pay for the EC2 instances (and EBS) whether the tasks pack them densely or not — bin-packing is your job. With **Fargate** you pay **per-task for the vCPU-seconds and GB-seconds** it requests, so idle capacity costs nothing but the per-unit rate is higher. Add the ALB, data transfer, and ECR storage. Fargate **Spot** and EC2 **Spot** cut the compute cost for interruptible tasks.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Fargate vs EC2 launch type**: Fargate for "no infrastructure to manage," bursty or spiky workloads, and small teams; EC2 for GPU/special instances, very high sustained utilization (cheaper per unit), or when you need daemon access to the host.
+- **`awsvpc` network mode** gives each task its own ENI and security group — the default and expected mode for Fargate.
+- **Task role** = permissions for the app in the container; **task execution role** = permissions for the agent to pull the image and write logs. Don't mix them up.
+- **Service Auto Scaling** (target tracking on CPU/memory/ALB request count) scales the task count; **Cluster Capacity Providers** scale the EC2 fleet under an EC2-launch-type service.
+- **ALB** for HTTP/gRPC microservices with path/host routing and dynamic port mapping; **NLB** for TCP/UDP or static IPs.
+- **ECS Anywhere** extends the ECS control plane to on-prem or other-cloud servers (covered separately). For persistent shared files, mount **EFS** into tasks.

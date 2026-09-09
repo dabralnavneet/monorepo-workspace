@@ -1,0 +1,71 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "ECR"
+description: "A private, IAM-controlled Docker registry with vulnerability scanning, lifecycle policies, and cross-Region replication built in."
+domain: "Compute"
+order: 46
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonElasticContainerRegistry, AmazonElasticContainerService, AwsLambda } from "@aws-icons/react/architecture-service";
+import { AmazonElasticContainerRegistryImage } from "@aws-icons/react/resource";
+
+export const ecrIcon = awsIconDataUri(AmazonElasticContainerRegistry);
+export const imageIcon = awsIconDataUri(AmazonElasticContainerRegistryImage);
+export const ecsIcon = awsIconDataUri(AmazonElasticContainerService);
+export const lambdaIcon = awsIconDataUri(AwsLambda);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Container platforms need somewhere to pull images from, and using Docker Hub for private images means separate credentials, rate limits, and no IAM integration. **Amazon ECR (Elastic Container Registry)** is a **private registry that speaks the Docker/OCI protocol** but is governed by **IAM** and **repository policies**, scans images for CVEs, expires old tags with **lifecycle policies**, and can **replicate** images across Regions and accounts. ECS, EKS, App Runner, and Lambda pull from it natively.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A **private repository** is **Regional**; its images are stored durably in **S3-backed storage** across multiple AZs in that Region, so there is no AZ to choose.
+- **Cross-Region and cross-account replication** rules copy images to other registries automatically — the pattern for multi-Region deployments so nodes pull locally.
+- **ECR Public** (`public.ecr.aws`) is a separate, globally distributed registry for images you want anyone to pull.
+- Pulls from inside a VPC can go over an **interface VPC endpoint** (plus an S3 gateway endpoint) to stay off the internet.
+
+<Mermaid
+  chart={`graph LR
+  CI["CI / docker build"] -->|"docker push"| REPO["ECR private repo"]
+  REPO -->|"scan on push"| SCAN["Image scan (CVEs)"]
+  REPO -->|"lifecycle policy"| PRUNE["Expire untagged / old images"]
+  REPO -->|"replication rule"| REPO2["ECR repo (other Region / account)"]
+  REPO -->|"docker pull"| ECS["ECS / EKS tasks"]
+  REPO -->|"pull"| LAMBDA["Lambda (container image)"]
+  classDef reg fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef consumer fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class REPO,REPO2 reg
+  class ECS,LAMBDA consumer`}
+  nodeIcons={{ REPO: [ecrIcon], REPO2: [imageIcon], ECS: [ecsIcon], LAMBDA: [lambdaIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay for **image storage per GB-month** and **data transfer out** (to the internet or across Regions). **Pulls within the same Region are free**, which is why replicating images to each deployment Region is cheaper than pulling cross-Region at scale. **Basic scanning** is free; **enhanced scanning** (Amazon Inspector, continuous) is billed per image. Lifecycle policies that prune stale images are the main cost lever.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **`aws ecr get-login-password | docker login`** authenticates the Docker CLI with a **12-hour token** derived from your IAM identity — no static registry credentials.
+- **Repository policies** (resource-based) grant **cross-account** pull/push; combine with the puller's IAM policy, same as S3.
+- **Lifecycle policies** expire images by age or count (e.g. "keep last 10 tagged, delete untagged after 7 days") — the standard answer for "control registry storage cost."
+- **Scan on push** + **enhanced scanning** for continuous CVE detection; findings surface in Inspector / Security Hub / EventBridge.
+- For **private pulls from a VPC with no internet**: ECR **interface endpoint** + **S3 gateway endpoint** (the image layers live in S3).
+- **Cross-Region replication** so each Region's compute pulls from a local repo — lower latency, no cross-Region transfer cost on pull.

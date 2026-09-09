@@ -1,0 +1,75 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Batch"
+description: "A managed job scheduler that provisions the right amount of EC2 or Fargate capacity to chew through a queue of containerized work, then scales back to nothing."
+domain: "Compute"
+order: 48
+date: "Sep 9, 2026"
+readTime: "6 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsBatch, AwsFargate, AmazonEc2 } from "@aws-icons/react/architecture-service";
+import { SpotFleet } from "@aws-icons/react/architecture-group";
+
+export const batchIcon = awsIconDataUri(AwsBatch);
+export const fargateIcon = awsIconDataUri(AwsFargate);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const spotIcon = awsIconDataUri(SpotFleet);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Batch workloads — genomics pipelines, financial risk runs, rendering, ETL, simulations — arrive as **thousands of independent jobs** that need a lot of compute for a while and none the rest of the time. Running a permanent cluster wastes money; hand-scripting Auto Scaling around a queue is fiddly. **AWS Batch** does it: you submit **jobs** (a container + vCPU/memory + command) to a **job queue**, and Batch **provisions exactly the compute a compute environment needs** (EC2, Spot, or Fargate), runs the jobs with priorities and dependencies, retries failures, and **scales the fleet back to zero** when the queue drains.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Job queues, compute environments, and job definitions are **Regional**. A **managed compute environment** launches instances across the **subnets/AZs** you give it, so Batch can place jobs in whichever AZ has capacity (important for **Spot**).
+- **Compute environment types**: *managed* (Batch owns capacity — EC2, EC2 Spot, or Fargate/Fargate Spot) or *unmanaged* (you attach your own ECS-registered capacity).
+- For tightly-coupled **multi-node parallel (MPI)** jobs, Batch can place instances in a **cluster placement group** in one AZ for low-latency interconnect.
+
+<Mermaid
+  chart={`graph LR
+  SUB["Submit jobs (container + vCPU/mem + cmd)"] --> Q["Job Queue (priority)"]
+  Q --> BATCH["AWS Batch scheduler"]
+  BATCH --> CE
+  subgraph CE["Managed Compute Environment (multi-AZ)"]
+    FG["Fargate / Fargate Spot"]
+    EC2N["EC2 On-Demand"]
+    SPOT["EC2 Spot fleet"]
+  end
+  CE -->|"runs"| JOBS["Containerized jobs (retries, array, dependsOn)"]
+  CE -.->|"queue empty"| ZERO(("Scale to 0"))
+  classDef q fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef job fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class Q,BATCH q
+  class JOBS job`}
+  clusterColors={{ CE: { stroke: "#2e8b3d" } }}
+  nodeIcons={{ BATCH: [batchIcon], FG: [fargateIcon], EC2N: [ec2Icon], SPOT: [spotIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+**AWS Batch adds no charge.** You pay only for the **EC2 or Fargate capacity while jobs run**, plus EBS and data transfer. The savings come from **scale-to-zero between runs** and from letting Batch use **Spot** (up to ~90% off) with automatic fallback and retry for interrupted jobs. Because the fleet is transient, a well-tuned queue costs a fraction of a standing HPC cluster.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "run thousands of batch jobs," "no cluster to manage," "scale compute to zero when idle," "cost-optimize large-scale batch / HPC / rendering / genomics" → **AWS Batch** (usually with **Spot**).
+- **Batch vs Lambda**: Lambda caps at 15 minutes and 10 GB memory; Batch jobs can run for **hours or days** on **large/GPU** instances. Use Batch for long, heavy compute.
+- **Batch vs Step Functions**: Step Functions orchestrates a workflow of steps/services; Batch executes a large fleet of similar compute jobs. They're often combined (Step Functions triggers Batch jobs).
+- **Array jobs** run N copies indexed by `AWS_BATCH_JOB_ARRAY_INDEX`; **job dependencies** (`dependsOn`) build simple DAGs; **job priority** orders queues sharing a compute environment.
+- Use **EC2 launch template / custom AMI** for extra drivers (e.g. GPU), larger scratch disk, or an agent. Fargate compute environments are simplest but can't do GPU or very large instances.
+- Send job logs to **CloudWatch Logs**; use **EventBridge** on job state changes for notifications and downstream triggers.

@@ -1,0 +1,70 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Serverless Application Model"
+description: "A short-hand syntax on top of CloudFormation for defining serverless apps — functions, APIs, tables, events — in a few lines."
+domain: "Compute"
+order: 50
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AwsServerlessApplicationRepository, AwsCloudFormation, AwsLambda } from "@aws-icons/react/architecture-service";
+
+export const samIcon = awsIconDataUri(AwsServerlessApplicationRepository);
+export const cfnIcon = awsIconDataUri(AwsCloudFormation);
+export const lambdaIcon = awsIconDataUri(AwsLambda);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Describing a serverless app in raw CloudFormation is verbose — a single Lambda-behind-an-API needs a function, a role, permissions, an API, stages, and integrations, dozens of lines each. The **AWS Serverless Application Model (SAM)** is a **CloudFormation transform**: you write compact resource types like `AWS::Serverless::Function`, `AWS::Serverless::Api`, `AWS::Serverless::HttpApi`, `AWS::Serverless::SimpleTable`, and `AWS::Serverless::StateMachine`, and at deploy time SAM **expands them into full CloudFormation**. The **SAM CLI** adds `sam build`, local testing (`sam local invoke` / `start-api` in Docker), guided deploys, and log tailing.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- A SAM deploy **is a CloudFormation stack** — **Regional**, with the same change-set, rollback, and drift behaviour. Multi-Region means deploying the stack in each Region (or via **StackSets**).
+- The resources it creates (Lambda, API Gateway, DynamoDB, Step Functions, EventBridge rules) carry their **own** availability characteristics — SAM is packaging, not runtime.
+- Built artifacts are uploaded to an **S3 bucket** (or ECR for container-image functions) in the target Region before the stack deploys.
+
+<Mermaid
+  chart={`graph LR
+  TMPL["template.yaml (SAM: Function, Api, Table)"] --> BUILD["sam build"]
+  BUILD --> PKG["sam deploy (package -> S3 / ECR)"]
+  PKG --> XFORM["CloudFormation transform (expand to full CFN)"]
+  XFORM --> STACK
+  subgraph STACK["CloudFormation stack"]
+    FN["Lambda functions + roles"]
+    API["API Gateway"]
+    DB["DynamoDB table"]
+  end
+  classDef sam fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef res fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class TMPL,XFORM sam
+  class FN,API,DB res`}
+  nodeIcons={{ TMPL: [samIcon], XFORM: [cfnIcon], FN: [lambdaIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+**SAM and CloudFormation are free.** You pay only for the resources the stack provisions (Lambda GB-seconds, API Gateway requests, DynamoDB, etc.) and the small **S3** cost for build artifacts. Because everything is defined as code, you can **tear the whole app down** (`sam delete`) between experiments to stop all charges.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- SAM templates start with **`Transform: AWS::Serverless-2016-10-31`** — that line is what makes it a SAM template rather than plain CloudFormation. You can mix normal CloudFormation resources in the same file.
+- **`sam local invoke` / `sam local start-api`** run functions in a Docker container that mimics the Lambda runtime — the standard "test serverless locally before deploying" answer.
+- SAM has **built-in support for safe deployments**: `AutoPublishAlias` + `DeploymentPreference` (Canary / Linear) wires up **CodeDeploy** traffic shifting and automatic rollback on CloudWatch alarms.
+- **SAM vs CDK vs Serverless Framework**: SAM is AWS-native, YAML, CloudFormation under the hood, serverless-focused; CDK is general-purpose infrastructure in a real programming language; both synthesize to CloudFormation.
+- The **Serverless Application Repository (SAR)** publishes and shares packaged SAM apps across accounts.

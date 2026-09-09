@@ -1,0 +1,77 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "Elastic Network Interfaces"
+description: "A virtual NIC you can detach from one instance and reattach to another — the movable network identity inside a VPC."
+domain: "Compute"
+order: 41
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2 } from "@aws-icons/react/architecture-service";
+import { AmazonVpcElasticNetworkInterface } from "@aws-icons/react/resource";
+import { PrivateSubnet } from "@aws-icons/react/architecture-group";
+
+export const eniIcon = awsIconDataUri(AmazonVpcElasticNetworkInterface);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+export const subnetIcon = awsIconDataUri(PrivateSubnet);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+An instance's network identity — its **private IP, MAC address, security groups, and source/dest check** — used to be welded to the instance. If the instance died, that identity died with it. An **Elastic Network Interface (ENI)** decouples them: the ENI is a **first-class VPC resource** that holds the network attributes, and you **attach** it to an instance. Kill the instance, detach the ENI, attach it to a standby instance, and the standby now answers on the **same IP and MAC** — the basis for lightweight failover, management networks, and licensing that's pinned to a MAC address.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An ENI lives in **one subnet**, so it is **locked to that subnet's Availability Zone** — you can only attach it to an instance in the **same AZ**.
+- Every instance has a **primary ENI (eth0)** that cannot be detached; you can add **secondary ENIs**, and moving those is what enables failover.
+- The number of ENIs and IPs per instance is capped by **instance type** (bigger instances allow more).
+
+<Mermaid
+  chart={`graph LR
+  subgraph AZ["Availability Zone A"]
+    subgraph SUB["Subnet 10.0.1.0/24"]
+      ENI["ENI: IP 10.0.1.50, MAC, SG-web"]
+    end
+    ACT["Active Instance"]
+    STBY["Standby Instance"]
+    ACT ---|"attached"| ENI
+    STBY -.->|"on failover, reattach"| ENI
+  end
+  classDef eni fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef inst fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  class ENI eni
+  class ACT,STBY inst`}
+  clusterColors={{
+    AZ: { stroke: "#3b82f6", dashed: true },
+    SUB: { stroke: "#2e8b3d" },
+  }}
+  nodeIcons={{ ENI: [eniIcon], ACT: [ec2Icon], STBY: [ec2Icon], SUB: [subnetIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+ENIs themselves are **free**. You pay only for what rides on them: an **Elastic IP** that isn't attached to a running instance, cross-AZ data transfer, and the instances they're attached to. The related **ENA / EFA** high-performance interface types are also free — they're a capability of the instance, not a separate charge.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Use cases the exam rewards**: a **management/admin network** on a separate ENI + subnet; **MAC-address-based licensing**; **low-cost active/passive failover** by moving a secondary ENI (or its secondary private IP) to a hot standby.
+- An ENI is **AZ-bound** — "move the ENI to an instance in another AZ" is a distractor; that's not possible.
+- **ENI vs ENA vs EFA**: ENI is the standard virtual NIC; **ENA** (Elastic Network Adapter) is enhanced networking for higher throughput/PPS; **EFA** (Elastic Fabric Adapter) adds OS-bypass for HPC/MPI and ML training.
+- Secondary ENIs get their own **security groups**, so you can give one instance interfaces in different security zones.
+- Disable **source/destination check** on an ENI when the instance is acting as a NAT box, router, or firewall appliance.
+- For containers, **awsvpc** networking mode gives each ECS task its **own ENI**, so task-level security groups apply.

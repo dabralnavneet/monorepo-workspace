@@ -1,0 +1,67 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "EC2 Image Builder"
+description: "A managed pipeline that builds, hardens, tests, and distributes golden machine images on a schedule — no more hand-baked AMIs."
+domain: "Compute"
+order: 40
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEc2ImageBuilder, AmazonEc2 } from "@aws-icons/react/architecture-service";
+
+export const ibIcon = awsIconDataUri(AmazonEc2ImageBuilder);
+export const ec2Icon = awsIconDataUri(AmazonEc2);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Teams that need a **standardized, patched, hardened base image** usually build it by hand: launch an instance, run a script, install an agent, snapshot an AMI, repeat every month. It's slow, error-prone, and undocumented. **EC2 Image Builder** turns that into a **declarative pipeline**: define a source image plus a list of **components** (install steps, CIS hardening, tests), and it builds the image in a throwaway environment, runs your validation tests, and **distributes the finished AMI** (and optionally a container image) to the Regions and accounts you specify — on a schedule or on a trigger.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- Pipelines, recipes, and components are **Regional** resources; the build runs in a **single AZ** in that Region on a temporary EC2 instance.
+- **Distribution settings** are how one build fans out **cross-Region and cross-account** — the output AMI is copied to each target Region, and launch permissions can be shared with other accounts (or an AWS Organization).
+- Output can be an **AMI**, a **container image pushed to ECR**, or both from the same recipe.
+
+<Mermaid
+  chart={`graph LR
+  BASE["Source image (Amazon Linux 2023)"] --> RECIPE["Image Recipe (base + components)"]
+  RECIPE --> BUILD["Build stage (temp EC2, run components)"]
+  BUILD --> TEST["Test stage (validation components)"]
+  TEST --> DIST["Distribution settings"]
+  DIST -->|"AMI"| R1["Region us-east-1"]
+  DIST -->|"AMI copy"| R2["Region eu-west-1"]
+  DIST -.->|"launch permission"| ACC["Other AWS accounts / Org"]
+  classDef stage fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef out fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class BUILD,TEST stage
+  class R1,R2 out`}
+  nodeIcons={{ RECIPE: [ibIcon], BUILD: [ec2Icon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+**Image Builder itself is free.** You pay only for the resources a pipeline run consumes: the **temporary EC2 instance** during build and test, the **EBS snapshots** backing the resulting AMI, **S3** for logs, **ECR** if you output container images, and **cross-Region data transfer** when copying AMIs. Runs are short, so the cost is small and predictable relative to the compliance value.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "automate golden AMI creation," "keep base images patched and hardened," "consistent images across Regions and accounts," "test images before release" → **EC2 Image Builder**.
+- It **integrates with AWS Organizations, License Manager, and Systems Manager** (SSM Agent runs the components), and can enforce that only approved, tested images are distributed.
+- Use it with **Auto Scaling launch templates** — point the template at the latest Image Builder AMI (via SSM Parameter Store) so new instances always boot the current golden image.
+- **Image Builder vs a Packer script**: same outcome, but Image Builder is managed, has a test stage, native multi-Region/account distribution, and scheduled rebuilds without you running a CI job.
+- CIS hardening and STIG components are **AWS-managed** and can be dropped straight into a recipe.

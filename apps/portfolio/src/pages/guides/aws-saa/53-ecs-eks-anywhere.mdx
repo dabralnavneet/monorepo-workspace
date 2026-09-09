@@ -1,0 +1,82 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "ECS/EKS Anywhere"
+description: "Run the ECS or EKS software on your own hardware, on your own hypervisor — same tooling, your infrastructure."
+domain: "Compute"
+order: 53
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonEcsAnywhere, AmazonEksAnywhere } from "@aws-icons/react/architecture-service";
+import { CorporateDataCenter } from "@aws-icons/react/architecture-group";
+
+export const ecsaIcon = awsIconDataUri(AmazonEcsAnywhere);
+export const eksaIcon = awsIconDataUri(AmazonEksAnywhere);
+export const dcIcon = awsIconDataUri(CorporateDataCenter);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+Teams standardized on ECS or EKS want the **same container tooling and workflows on-premises** — but Outposts (AWS-owned hardware) is more than they need, and they already have their own servers and hypervisor. **ECS Anywhere** and **EKS Anywhere** solve this by letting you run the orchestrator software **on infrastructure you own and manage**:
+
+- **ECS Anywhere** — register your on-prem (or other-cloud) VMs/bare-metal as **external instances** in an ECS cluster whose **control plane still runs in AWS**. You manage tasks with the same ECS API and console.
+- **EKS Anywhere** — install and run a **full Kubernetes cluster on your own hardware** (built on the EKS Distro), managed locally with `eksctl anywhere`. It can run **fully disconnected**; an optional connector shows it in the EKS console.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- **ECS Anywhere**: the **control plane is in an AWS Region**; your external instances need outbound connectivity to it (via SSM Agent + ECS Agent). Tasks run wherever your servers physically are — no AWS AZ concept.
+- **EKS Anywhere**: **entirely on your infrastructure** — control plane and workers both on-prem. It can operate with **no connection to AWS at all**; the **EKS Connector** only adds read-mostly visibility in the console.
+- Both rely on **your** networking, storage, and hardware HA — AWS doesn't provide an AZ or a rack here.
+
+<Mermaid
+  chart={`graph LR
+  subgraph DC["Your Data Center / hardware"]
+    subgraph ECSA["ECS Anywhere"]
+      EXT["External instances (SSM + ECS agent)"]
+      T["ECS tasks"]
+      EXT --> T
+    end
+    subgraph EKSA["EKS Anywhere"]
+      LOCALK8S["Local Kubernetes cluster (EKS Distro)"]
+    end
+  end
+  AWSCP["ECS control plane (AWS Region)"] <-->|"manages tasks"| EXT
+  EKSCONN["EKS Connector (optional)"] -.->|"read-only view"| LOCALK8S
+  classDef a fill:#e8f0fe,stroke:#3b82f6,stroke-width:2px,color:#173a70
+  classDef b fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  class EXT,T a
+  class LOCALK8S b`}
+  clusterColors={{
+    DC: { stroke: "#3b82f6", dashed: true },
+    ECSA: { stroke: "#3b82f6" },
+    EKSA: { stroke: "#8b3de0" },
+  }}
+  nodeIcons={{ ECSA: [ecsaIcon], EKSA: [eksaIcon], DC: [dcIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+**ECS Anywhere** bills a small **per-hour fee per registered external instance**; you provide (and pay for) the hardware. **EKS Anywhere** is **free to run** on your own infrastructure (open-source EKS Distro); an optional **EKS Anywhere Enterprise Subscription** adds AWS support and curated add-ons per cluster per year. No AWS compute charges — the servers are yours.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Decision order for on-prem containers**: want AWS-owned managed hardware → **Outposts**; want your own hardware but AWS-managed ECS control plane → **ECS Anywhere**; want a self-managed Kubernetes cluster on your own hardware, possibly air-gapped → **EKS Anywhere**.
+- **ECS Anywhere** keeps you in the ECS API/console; **EKS Anywhere** is standard `kubectl` against a cluster you operate.
+- **EKS Anywhere can run fully disconnected** — the exam likes this for "air-gapped" or "no reliable internet" scenarios. ECS Anywhere needs a path back to its Region control plane.
+- Both use **Amazon ECR** (or any registry) for images; **EKS Distro** is the same Kubernetes components AWS runs in EKS, packaged for self-hosting.
+- External instances are registered and bootstrapped via **AWS Systems Manager**.

@@ -1,0 +1,80 @@
+---
+layout: ../../../layouts/GuidePostLayout.astro
+title: "VMware Cloud on AWS"
+description: "A full VMware SDDC — vSphere, vSAN, NSX — running on dedicated bare-metal EC2 hosts, so you can lift-and-shift VMs without re-platforming."
+domain: "Compute"
+order: 54
+date: "Sep 9, 2026"
+readTime: "5 min read"
+---
+
+import { Icon } from "astro-icon/components";
+import Mermaid from "../../../components/Mermaid.astro";
+import { awsIconDataUri } from "../../../lib/aws-icon-data-uri";
+import { AmazonElasticVmwareService } from "@aws-icons/react/architecture-service";
+import { CorporateDataCenter } from "@aws-icons/react/architecture-group";
+
+export const vmwIcon = awsIconDataUri(AmazonElasticVmwareService);
+export const dcIcon = awsIconDataUri(CorporateDataCenter);
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:lightbulb-on-outline" width={22} height={22} />
+  <h2 class="!m-0">What Problem It Solves</h2>
+</div>
+
+An organisation with hundreds of on-prem VMware VMs wants to exit its data center **fast**, without re-architecting every workload into native EC2 or containers, and without retraining its VMware operators. **VMware Cloud on AWS** runs a complete **VMware Software-Defined Data Center — vSphere (compute), vSAN (storage), NSX (networking), vCenter (management)** — on **dedicated, single-tenant bare-metal EC2 hosts** inside an AWS VPC. Existing VMs, tools (vMotion, HCX, vRealize), and skills carry over unchanged, while the workloads gain **low-latency access to native AWS services** next door.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:earth" width={22} height={22} />
+  <h2 class="!m-0">Global | Regional | AZ Scope</h2>
+</div>
+
+- An **SDDC** is deployed in an AWS **Region**. A **stretched cluster** option spans **two AZs** with synchronous vSAN replication for host/AZ fault tolerance; a standard cluster sits in **one AZ**.
+- It lives in an **AWS-managed VPC** connected to your **customer VPC** via a cross-account ENI, so VMs reach RDS, S3, and other AWS services privately and cheaply.
+- Connectivity to your remaining on-prem estate is over **Direct Connect** or **VPN**, typically with **VMware HCX** handling bulk migration and live vMotion.
+
+<Mermaid
+  chart={`graph LR
+  subgraph ONPREM["On-Premises VMware"]
+    VMS["Existing VMs + vCenter"]
+  end
+  VMS -->|"HCX / vMotion (DX or VPN)"| SDDC
+  subgraph AWS["AWS Region"]
+    subgraph SDDC["VMware Cloud on AWS SDDC (dedicated bare-metal hosts)"]
+      VSPHERE["vSphere"]
+      VSAN["vSAN"]
+      NSX["NSX"]
+    end
+    NATIVE["Native AWS (RDS, S3, ELB, ...)"]
+    SDDC -->|"low-latency ENI"| NATIVE
+  end
+  classDef sddc fill:#f3ecfb,stroke:#8b3de0,stroke-width:2px,color:#3a1a5c
+  classDef aws fill:#eaf7ec,stroke:#2e8b3d,stroke-width:2px,color:#1a3d20
+  class VSPHERE,VSAN,NSX sddc
+  class NATIVE aws`}
+  clusterColors={{
+    ONPREM: { stroke: "#3b82f6", dashed: true },
+    AWS: { stroke: "#2e8b3d" },
+    SDDC: { stroke: "#8b3de0" },
+  }}
+  nodeIcons={{ SDDC: [vmwIcon], ONPREM: [dcIcon] }}
+/>
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:currency-usd" width={22} height={22} />
+  <h2 class="!m-0">Cost</h2>
+</div>
+
+You pay **per host** (a fixed hardware spec), **On-Demand** or with **1- or 3-year reserved** commitments for large discounts, with a **minimum cluster size** (production clusters need multiple hosts). That covers the bundled VMware licensing and the SDDC software. Native AWS services you call are billed normally; **data transfer between the SDDC and a customer VPC in the same AZ is free**, which is a major reason to co-locate.
+
+<div class="icon-row mb-6">
+  <Icon name="mdi:school-outline" width={22} height={22} />
+  <h2 class="!m-0">Exam Tips</h2>
+</div>
+
+- **Trigger phrases**: "migrate a large VMware estate to AWS quickly," "keep using vSphere/vCenter/vMotion and existing VMware skills," "hybrid VMware environment," "lift-and-shift without re-platforming" → **VMware Cloud on AWS**.
+- It's **dedicated bare-metal EC2 hosts** — single-tenant, not shared. That's why there's a per-host price and a minimum cluster size.
+- **Stretched clusters across 2 AZs** give infrastructure HA with synchronous storage — mention this for "must survive an AZ failure" VMware scenarios.
+- **VMware HCX** is the migration engine (bulk migration, live vMotion, WAN optimization) between on-prem and the SDDC.
+- **VMware Cloud on AWS vs Outposts**: VMC runs *VMware's* stack on AWS hardware *in a Region*; Outposts runs *AWS's* stack on AWS hardware *in your data center*.
+- Post-migration, you can modernise gradually — move individual VMs to native EC2, containers, or managed databases at your own pace.

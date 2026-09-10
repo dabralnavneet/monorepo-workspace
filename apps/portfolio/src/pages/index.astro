@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero';
+import Path from '../components/Path';
 import Articles from '../components/Articles';
 import Guides from '../components/Guides';
 import { getAwsSaaSidebar } from '../lib/aws-saa-curriculum';
@@ -42,6 +43,7 @@ const guideSeries = [
 <Layout title="Navneet Dabral — Senior Software Engineer">
   <main>
     <Hero client:load years={years} />
+    <Path client:visible />
     <Articles client:load articles={articles} />
     <Guides client:load series={guideSeries} />
   </main>

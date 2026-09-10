@@ -17,7 +17,7 @@ export default function Guides({ series }: Readonly<{ series: GuideSeries[] }>) 
       id="guides"
       className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32"
     >
-      <SectionHeader index="02" label="Guides" />
+      <SectionHeader index="03" label="Guides" />
 
       {/* Series list */}
       <div>

@@ -15,7 +15,7 @@ export default function Contact() {
       id="contact"
       className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32 border-t border-zinc-200 dark:border-zinc-900"
     >
-      <SectionHeader index="03" label="Contact" />
+      <SectionHeader index="04" label="Contact" />
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 md:gap-20">
         {/* Heading */}

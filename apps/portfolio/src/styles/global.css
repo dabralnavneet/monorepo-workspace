@@ -65,26 +65,110 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #333; }
   to { height: 0; }
 }
 
+/* --- Path chart palette -------------------------------------------------------
+   The validated 3-slot categorical palette, as roles rather than raw hex so the
+   light/dark steps swap in one place. Both modes pass every gate on the
+   all-pairs pairlist (small multiples in depth is an all-pairs form, which caps
+   the series count at three). Light-mode aqua sits at 2.7:1 on this surface —
+   under 3:1 — so the relief rule applies: the lanes carry visible direct labels
+   and the section ships a table view. Do not add a fourth slot without
+   re-running the validator; slot 4 puts yellow beside orange and fails. */
+.path-viz {
+  --path-frontend: #2a78d6;
+  --path-backend: #eb6834;
+  --path-platform: #1baf7a;
+}
+
+:root.dark .path-viz {
+  --path-frontend: #3987e5;
+  --path-backend: #d95926;
+  --path-platform: #199e70;
+}
+
+/* --- Nav --------------------------------------------------------------------
+   Transparent over the hero, materialising into frosted glass once you scroll
+   past it. `backdrop-filter` is doing the part WebGL can't — sampling the page
+   behind the bar — while NavCanvas draws the moving highlight on top of it. */
+.nav-shell {
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color 400ms ease,
+    border-color 400ms ease,
+    backdrop-filter 400ms ease;
+}
+
+/* Over the hero the bar is transparent, and the aurora underneath can drift
+   bright enough to swallow the links. This scrim keeps them legible without
+   reading as a filled bar. */
+.nav-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(250, 250, 250, 0.62), rgba(250, 250, 250, 0));
+}
+
+:root.dark .nav-shell::before {
+  background: linear-gradient(to bottom, rgba(6, 8, 15, 0.62), rgba(6, 8, 15, 0));
+}
+
+.nav-shell[data-scrolled='true'] {
+  background: rgba(250, 250, 250, 0.72);
+  border-bottom-color: rgba(24, 24, 27, 0.08);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+
+:root.dark .nav-shell[data-scrolled='true'] {
+  background: rgba(6, 8, 15, 0.68);
+  border-bottom-color: rgba(250, 250, 250, 0.1);
+}
+
+/* Full-screen mobile menu backdrop. Opaque on purpose: at any translucency the
+   hero type and the nav bar read straight through it, and `backdrop-filter` is
+   not reliable enough across mobile browsers to be what hides them. */
+.nav-sheet {
+  background: #fafafa;
+}
+
+:root.dark .nav-sheet {
+  background: #06080f;
+}
+
 /* --- Hero theming -------------------------------------------------------------
-   The hero is a fixed light art panel — it keeps this pastel palette in both
-   themes (dimming the video + panda for dark mode just turns them to mud). The
-   wavy divider, filled with the page background, carries the light->dark seam.
-   Tokens live here because the component's inline styles can't use dark:. */
+   The hero follows the site theme: a pastel wash in light, an emissive nebula
+   on near-black in dark. These tokens cover everything the WebGL canvas can't
+   (ink, scrim, grain, and the no-WebGL fallback gradient) and live here because
+   the component's inline styles can't use dark:. The aurora's own palette
+   crossfades in the shader — see AuroraBackground's `u_dark`. */
 :root {
+  /* Hero type scale. Phones get their own values rather than bottoming out on a
+     `clamp()` floor — at 390px a `12vw` term collapses and the display type ends
+     up sized by its minimum, which is what made the mobile hero read as flat.
+     At 17vw the name sets one line spanning ~85% of the viewport at every phone
+     width. It stays a single line because Instrument Serif is narrow (~0.36em
+     average advance); the wider fallback (Georgia, during the webfont swap)
+     wraps to two lines instead of overflowing, which `whitespace-normal` below
+     `sm` allows for. */
+  --hero-label-size: 11px;
+  --hero-label-tracking: 0.2em;
+  --hero-name-size: clamp(54px, 17vw, 78px);
+  --hero-quote-size: 15px;
+  --hero-quote-gap: 20px;
+
   --hero-bg: #eaf4fc;
   --hero-ink: #2a2622;
   --hero-ink-soft: rgba(42, 38, 34, 0.82);
   --hero-grain-opacity: 0.06;
   --hero-grain-blend: overlay;
-  /* Left-weighted wash over the background video so the (left-aligned) text
-     keeps contrast; the video itself is nudged for the current theme. */
+  /* Left-weighted wash over the aurora so the (left-aligned) text keeps
+     contrast; the aurora already calms its own left edge, this seals it. */
   --hero-scrim: linear-gradient(
     100deg,
     rgba(255, 255, 255, 0.55) 0%,
     rgba(255, 255, 255, 0.14) 52%,
     rgba(255, 255, 255, 0) 100%
   );
-  --hero-video-filter: saturate(1.05);
   --hero-blobs:
     radial-gradient(60% 55% at 16% 82%, #eaf4fc 0%, rgba(234, 244, 252, 0) 72%),
     radial-gradient(72% 93% at 78% 26%, #b28fce 0%, rgba(178, 143, 206, 0) 60%),
@@ -93,16 +177,46 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #333; }
     #eaf4fc;
 }
 
-.hero-section { background-color: var(--hero-bg); }
+/* Pairs with the `:root` block above — same token set, dark values. */
+:root.dark {
+  --hero-bg: #06080f;
+  --hero-ink: #f4f7fb;
+  --hero-ink-soft: rgba(244, 247, 251, 0.7);
+  --hero-grain-opacity: 0.1;
+  --hero-grain-blend: overlay;
+  --hero-scrim: linear-gradient(
+    100deg,
+    rgba(6, 8, 15, 0.74) 0%,
+    rgba(6, 8, 15, 0.32) 52%,
+    rgba(6, 8, 15, 0) 100%
+  );
+  --hero-blobs:
+    radial-gradient(60% 55% at 16% 82%, #0b1020 0%, rgba(11, 16, 32, 0) 72%),
+    radial-gradient(72% 93% at 78% 26%, #3a2170 0%, rgba(58, 33, 112, 0) 60%),
+    radial-gradient(78% 62% at 88% 84%, #6d1f4a 0%, rgba(109, 31, 74, 0) 62%),
+    radial-gradient(50% 44% at 24% 16%, #10456b 0%, rgba(16, 69, 107, 0) 62%),
+    #06080f;
+}
+
+/* From `sm` the name goes back to a single line (Hero sets `whitespace-nowrap`
+   there), so the scale has to be one that fits on one. */
+@media (min-width: 640px) {
+  :root {
+    --hero-label-size: clamp(12px, 1.1vw, 14px);
+    --hero-label-tracking: 0.28em;
+    --hero-name-size: clamp(64px, 9.5vw, 118px);
+    --hero-quote-size: clamp(14px, 1.35vw, 18px);
+    --hero-quote-gap: clamp(20px, 1.8vw, 28px);
+  }
+}
+
+.hero-section {
+  background-color: var(--hero-bg);
+  transition: background-color 500ms ease;
+}
 .hero-blobs { background: var(--hero-blobs); }
-.hero-video { filter: var(--hero-video-filter); }
 .hero-scrim { background: var(--hero-scrim); }
 .hero-grain {
   opacity: var(--hero-grain-opacity);
   mix-blend-mode: var(--hero-grain-blend);
-}
-
-/* Honour reduced-motion: drop the video, fall back to the static gradient. */
-@media (prefers-reduced-motion: reduce) {
-  .hero-video { display: none; }
 }

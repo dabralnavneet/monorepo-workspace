@@ -18,7 +18,7 @@ export default function Articles({ articles }: { articles: Article[] }) {
       id="writing"
       className="px-6 md:px-12 lg:px-20 max-w-7xl mx-auto w-full py-12 sm:py-20 md:py-32"
     >
-      <SectionHeader index="01" label="Writing" />
+      <SectionHeader index="02" label="Writing" />
 
       {/* Articles list */}
       <div>

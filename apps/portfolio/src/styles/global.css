@@ -3,6 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {
+  /* Bound to the theme class, not the OS: scrollbars and form controls follow
+     the theme the visitor actually chose. Light is the default. */
+  color-scheme: light;
   background: #fafafa;
   color: #18181b;
   scroll-behavior: smooth;
@@ -13,6 +16,7 @@ html {
 }
 
 html.dark {
+  color-scheme: dark;
   background: #000;
   color: #fafafa;
 }

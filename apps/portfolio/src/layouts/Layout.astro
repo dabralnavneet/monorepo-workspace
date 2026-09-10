@@ -17,7 +17,9 @@ const { title, sidebar = false } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Navneet Dabral — Senior Software Engineer" />
-    <meta name="color-scheme" content="light dark" />
+    <!-- Light is the default, so the UA paints its initial canvas light even on
+         a dark-OS machine; `html.dark` switches color-scheme once CSS parses. -->
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,11 +30,13 @@ const { title, sidebar = false } = Astro.props;
       // Applied before paint to avoid a flash of the wrong theme, and re-applied
       // after each view-transition navigation (the <html> element persists, so
       // the class usually survives — this is belt-and-suspenders).
+      //
+      // Light is the default: dark applies only when the visitor has chosen it
+      // here. `prefers-color-scheme` is deliberately not consulted, so a visitor
+      // whose OS is dark still lands on the light hero until they toggle.
       (function () {
         function applyTheme() {
-          var stored = localStorage.getItem('theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = stored ? stored === 'dark' : prefersDark;
+          var isDark = localStorage.getItem('theme') === 'dark';
           document.documentElement.classList.toggle('dark', isDark);
         }
         applyTheme();
